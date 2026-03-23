@@ -29,6 +29,7 @@ export interface Message {
   text: string;
   from: 'user' | 'operator';
   timestamp: string;
+  seq?: number;
   mediaType?: 'photo' | 'video' | 'voice' | 'document';
   mediaFileId?: string;
   mediaUrl?: string;

@@ -1,4 +1,4 @@
-import { put, del, list, head } from '@vercel/blob';
+import { getSql, initDb } from './db';
 import type {
   BotConfig,
   ChatMeta,
@@ -8,151 +8,328 @@ import type {
   StoredPushSubscription,
 } from './types';
 
-function getToken(): string {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) {
-    throw new Error('BLOB_READ_WRITE_TOKEN is not set');
-  }
-  return token;
+type BotRow = {
+  bot_id: string | number;
+  bot_token: string;
+  bot_username: string;
+  bot_name: string;
+  owner_telegram_id: string | number;
+  invite_token: string;
+  created_at: string | Date;
+};
+
+type ChatRow = {
+  id: string | number;
+  bot_id: string | number;
+  participant_chat_id: string | number;
+  participant_name: string;
+  participant_first_name: string | null;
+  participant_last_name: string | null;
+  participant_username: string | null;
+  message_limit: number;
+  created_at: string | Date;
+  updated_at: string | Date;
+};
+
+type MessageRow = {
+  id: string;
+  seq: string | number;
+  sender_role: 'user' | 'operator';
+  text: string;
+  media_type: Message['mediaType'] | null;
+  media_file_id: string | null;
+  media_url: string | null;
+  created_at: string | Date;
+};
+
+type PushSubscriptionRow = {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string | Date;
+  updated_at: string | Date;
+};
+
+type PushPresenceRow = {
+  client_id: string;
+  subscription_id: string | null;
+  active_chat_id: string | number | null;
+  updated_at: string | Date;
+};
+
+function toIsoString(value: string | Date): string {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-async function fetchBlobJson<T>(url: string): Promise<T | null> {
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return await response.json() as T;
+function toNumber(value: string | number): number {
+  return typeof value === 'number' ? value : Number(value);
 }
 
-// Bot configuration
+function mapBot(row: BotRow): BotConfig {
+  return {
+    botToken: row.bot_token,
+    botId: toNumber(row.bot_id),
+    botUsername: row.bot_username,
+    botName: row.bot_name,
+    ownerTelegramId: toNumber(row.owner_telegram_id),
+    inviteToken: row.invite_token,
+    createdAt: toIsoString(row.created_at),
+  };
+}
+
+function mapChat(row: ChatRow): ChatMeta {
+  return {
+    botId: toNumber(row.bot_id),
+    participantChatId: toNumber(row.participant_chat_id),
+    participantName: row.participant_name,
+    participantFirstName: row.participant_first_name ?? undefined,
+    participantLastName: row.participant_last_name ?? undefined,
+    participantUsername: row.participant_username ?? undefined,
+    messageLimit: row.message_limit,
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
+  };
+}
+
+function mapMessage(row: MessageRow): Message {
+  return {
+    id: row.id,
+    text: row.text,
+    from: row.sender_role,
+    timestamp: toIsoString(row.created_at),
+    mediaType: row.media_type ?? undefined,
+    mediaFileId: row.media_file_id ?? undefined,
+    mediaUrl: row.media_url ?? undefined,
+    seq: toNumber(row.seq),
+  };
+}
+
+async function getChatRow(botId: number, participantChatId: number): Promise<ChatRow | null> {
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<ChatRow[]>`
+    select *
+    from chats
+    where bot_id = ${botId} and participant_chat_id = ${participantChatId}
+    limit 1
+  `;
+
+  return rows[0] ?? null;
+}
+
+async function pruneMessages(chatRowId: number, messageLimit: number) {
+  if (messageLimit <= 0) {
+    return;
+  }
+
+  const sql = getSql();
+
+  await sql`
+    delete from messages
+    where chat_row_id = ${chatRowId}
+      and id in (
+        select id
+        from messages
+        where chat_row_id = ${chatRowId}
+        order by seq desc
+        offset ${messageLimit}
+      )
+  `;
+}
+
 export async function saveBotConfig(botId: number, config: BotConfig): Promise<void> {
-  await put(`bots/${botId}/config.json`, JSON.stringify(config), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: getToken(),
-  });
+  await initDb();
+  const sql = getSql();
+
+  await sql`
+    insert into bots (bot_id, bot_token, bot_username, bot_name, owner_telegram_id, invite_token, created_at)
+    values (
+      ${botId},
+      ${config.botToken},
+      ${config.botUsername},
+      ${config.botName},
+      ${config.ownerTelegramId},
+      ${config.inviteToken}::uuid,
+      ${config.createdAt}
+    )
+    on conflict (bot_id) do update set
+      bot_token = excluded.bot_token,
+      bot_username = excluded.bot_username,
+      bot_name = excluded.bot_name,
+      owner_telegram_id = excluded.owner_telegram_id,
+      invite_token = excluded.invite_token
+  `;
 }
 
 export async function getBotConfig(botId: number): Promise<BotConfig | null> {
-  try {
-    const result = await head(`bots/${botId}/config.json`, { token: getToken() });
-    if (!result) return null;
-    return await fetchBlobJson<BotConfig>(result.url);
-  } catch {
-    return null;
-  }
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<BotRow[]>`select * from bots where bot_id = ${botId} limit 1`;
+  return rows[0] ? mapBot(rows[0]) : null;
 }
 
 export async function deleteBotConfig(botId: number): Promise<void> {
-  try {
-    await del(`bots/${botId}/config.json`, { token: getToken() });
-  } catch {
-    // ignore
-  }
+  await initDb();
+  const sql = getSql();
+  await sql`delete from bots where bot_id = ${botId}`;
 }
 
 export async function listUserBots(ownerTelegramId: number): Promise<BotConfig[]> {
-  const result = await list({ prefix: 'bots/', token: getToken() });
-  const bots: BotConfig[] = [];
-  
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith('/config.json')) continue;
-    try {
-      const headResult = await head(blob.pathname, { token: getToken() });
-      if (!headResult) continue;
-      const config = await fetchBlobJson<BotConfig>(headResult.url);
-      if (!config) continue;
-      if (config.ownerTelegramId === ownerTelegramId) {
-        bots.push(config);
-      }
-    } catch {
-      // ignore
-    }
-  }
-  
-  return bots;
-}
+  await initDb();
+  const sql = getSql();
 
-// Chat operations - using botId_participantChatId as key
-function getChatKey(botId: number, participantChatId: number): string {
-  return `chats/${botId}_${participantChatId}`;
-}
+  const rows = await sql<BotRow[]>`
+    select *
+    from bots
+    where owner_telegram_id = ${ownerTelegramId}
+    order by created_at desc
+  `;
 
-function getPushSubscriptionKey(inviteToken: string, subscriptionId: string): string {
-  return `push/${inviteToken}/subscriptions/${subscriptionId}.json`;
-}
-
-function getPushPresenceKey(inviteToken: string, clientId: string): string {
-  return `push/${inviteToken}/presence/${clientId}.json`;
+  return rows.map(mapBot);
 }
 
 export async function saveChatMeta(botId: number, participantChatId: number, meta: ChatMeta): Promise<void> {
-  await put(`${getChatKey(botId, participantChatId)}/meta.json`, JSON.stringify(meta), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: getToken(),
-  });
+  await initDb();
+  const sql = getSql();
+
+  await sql`
+    insert into chats (
+      bot_id,
+      participant_chat_id,
+      participant_name,
+      participant_first_name,
+      participant_last_name,
+      participant_username,
+      message_limit,
+      created_at,
+      updated_at
+    )
+    values (
+      ${botId},
+      ${participantChatId},
+      ${meta.participantName},
+      ${meta.participantFirstName ?? null},
+      ${meta.participantLastName ?? null},
+      ${meta.participantUsername ?? null},
+      ${meta.messageLimit},
+      ${meta.createdAt},
+      ${meta.updatedAt}
+    )
+    on conflict (bot_id, participant_chat_id) do update set
+      participant_name = excluded.participant_name,
+      participant_first_name = excluded.participant_first_name,
+      participant_last_name = excluded.participant_last_name,
+      participant_username = excluded.participant_username,
+      message_limit = excluded.message_limit,
+      updated_at = excluded.updated_at
+  `;
 }
 
 export async function getChatMeta(botId: number, participantChatId: number): Promise<ChatMeta | null> {
-  try {
-    const result = await head(`${getChatKey(botId, participantChatId)}/meta.json`, { token: getToken() });
-    if (!result) return null;
-    return await fetchBlobJson<ChatMeta>(result.url);
-  } catch {
-    return null;
-  }
+  const row = await getChatRow(botId, participantChatId);
+  return row ? mapChat(row) : null;
 }
 
-// Get chat by invite token (for parent web interface)
 export async function getChatByInviteToken(inviteToken: string): Promise<{ botId: number; config: BotConfig } | null> {
-  const result = await list({ prefix: 'bots/', token: getToken() });
-  
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith('/config.json')) continue;
-    try {
-      const headResult = await head(blob.pathname, { token: getToken() });
-      if (!headResult) continue;
-      const config = await fetchBlobJson<BotConfig>(headResult.url);
-      if (!config) continue;
-      if (config.inviteToken === inviteToken) {
-        return { botId: config.botId, config };
-      }
-    } catch {
-      // ignore
-    }
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<BotRow[]>`
+    select *
+    from bots
+    where invite_token = ${inviteToken}::uuid
+    limit 1
+  `;
+
+  if (!rows[0]) {
+    return null;
   }
-  
-  return null;
+
+  const config = mapBot(rows[0]);
+  return { botId: config.botId, config };
 }
 
 export async function getChatMessages(botId: number, participantChatId: number): Promise<ChatMessages> {
-  try {
-    const result = await head(`${getChatKey(botId, participantChatId)}/messages.json`, { token: getToken() });
-    if (!result) return { messages: [] };
-    return await fetchBlobJson<ChatMessages>(result.url) ?? { messages: [] };
-  } catch {
+  const chatRow = await getChatRow(botId, participantChatId);
+  if (!chatRow) {
     return { messages: [] };
   }
+
+  const sql = getSql();
+
+  const rows = await sql<MessageRow[]>`
+    select id, seq, sender_role, text, media_type, media_file_id, media_url, created_at
+    from messages
+    where chat_row_id = ${toNumber(chatRow.id)}
+    order by seq asc
+  `;
+
+  return { messages: rows.map(mapMessage) };
+}
+
+export async function getChatMessagesSince(botId: number, participantChatId: number, afterSeq: number): Promise<ChatMessages> {
+  const chatRow = await getChatRow(botId, participantChatId);
+  if (!chatRow) {
+    return { messages: [] };
+  }
+
+  const sql = getSql();
+
+  const rows = await sql<MessageRow[]>`
+    select id, seq, sender_role, text, media_type, media_file_id, media_url, created_at
+    from messages
+    where chat_row_id = ${toNumber(chatRow.id)} and seq > ${afterSeq}
+    order by seq asc
+  `;
+
+  return { messages: rows.map(mapMessage) };
+}
+
+export async function getMessageById(messageId: string): Promise<Message | null> {
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<MessageRow[]>`
+    select id, seq, sender_role, text, media_type, media_file_id, media_url, created_at
+    from messages
+    where id = ${messageId}
+    limit 1
+  `;
+
+  return rows[0] ? mapMessage(rows[0]) : null;
 }
 
 export async function saveChatMessages(botId: number, participantChatId: number, messages: ChatMessages): Promise<void> {
-  await put(`${getChatKey(botId, participantChatId)}/messages.json`, JSON.stringify(messages), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: getToken(),
-  });
+  await initDb();
+  const sql = getSql();
+
+  const chatRow = await getChatRow(botId, participantChatId);
+  if (!chatRow) {
+    return;
+  }
+
+  const chatRowId = toNumber(chatRow.id);
+
+  await sql`delete from messages where chat_row_id = ${chatRowId}`;
+
+  for (const message of messages.messages) {
+    await sql`
+      insert into messages (id, chat_row_id, sender_role, text, media_type, media_file_id, media_url, created_at)
+      values (
+        ${message.id},
+        ${chatRowId},
+        ${message.from},
+        ${message.text},
+        ${message.mediaType ?? null},
+        ${message.mediaFileId ?? null},
+        ${message.mediaUrl ?? null},
+        ${message.timestamp}
+      )
+    `;
+  }
 }
 
 export async function addMessageToChat(
@@ -160,119 +337,153 @@ export async function addMessageToChat(
   participantChatId: number,
   message: Message,
   messageLimit: number
-): Promise<void> {
-  const chat = await getChatMessages(botId, participantChatId);
-  chat.messages.push(message);
-  
-  if (chat.messages.length > messageLimit) {
-    chat.messages = chat.messages.slice(-messageLimit);
+): Promise<Message> {
+  await initDb();
+  const sql = getSql();
+
+  const chatRow = await getChatRow(botId, participantChatId);
+  if (!chatRow) {
+    throw new Error('Chat not found');
   }
-  
-  await saveChatMessages(botId, participantChatId, chat);
+
+  const inserted = await sql<MessageRow[]>`
+    insert into messages (id, chat_row_id, sender_role, text, media_type, media_file_id, media_url, created_at)
+    values (
+      ${message.id},
+      ${toNumber(chatRow.id)},
+      ${message.from},
+      ${message.text},
+      ${message.mediaType ?? null},
+      ${message.mediaFileId ?? null},
+      ${message.mediaUrl ?? null},
+      ${message.timestamp}
+    )
+    returning id, seq, sender_role, text, media_type, media_file_id, media_url, created_at
+  `;
+
+  await sql`
+    update chats
+    set updated_at = ${message.timestamp}, message_limit = ${messageLimit}
+    where id = ${toNumber(chatRow.id)}
+  `;
+
+  await pruneMessages(toNumber(chatRow.id), messageLimit);
+
+  return mapMessage(inserted[0]);
 }
 
 export async function deleteChatData(botId: number, participantChatId: number): Promise<void> {
-  try {
-    await del(`${getChatKey(botId, participantChatId)}/meta.json`, { token: getToken() });
-    await del(`${getChatKey(botId, participantChatId)}/messages.json`, { token: getToken() });
-  } catch {
-    // ignore
-  }
+  await initDb();
+  const sql = getSql();
+  await sql`delete from chats where bot_id = ${botId} and participant_chat_id = ${participantChatId}`;
 }
 
-export async function savePushSubscription(inviteToken: string, subscription: StoredPushSubscription): Promise<void> {
-  await put(getPushSubscriptionKey(inviteToken, subscription.id), JSON.stringify(subscription), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: getToken(),
-  });
-}
-
-export async function deletePushSubscription(inviteToken: string, subscriptionId: string): Promise<void> {
-  try {
-    await del(getPushSubscriptionKey(inviteToken, subscriptionId), { token: getToken() });
-  } catch {
-    // ignore
-  }
-}
-
-export async function listPushSubscriptions(inviteToken: string): Promise<StoredPushSubscription[]> {
-  const result = await list({ prefix: `push/${inviteToken}/subscriptions/`, token: getToken() });
-  const subscriptions: StoredPushSubscription[] = [];
-
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith('.json')) continue;
-    try {
-      const headResult = await head(blob.pathname, { token: getToken() });
-      if (!headResult) continue;
-      const subscription = await fetchBlobJson<StoredPushSubscription>(headResult.url);
-      if (!subscription) continue;
-      subscriptions.push(subscription);
-    } catch {
-      // ignore
-    }
-  }
-
-  return subscriptions;
-}
-
-export async function savePushPresence(inviteToken: string, presence: PushPresence): Promise<void> {
-  await put(getPushPresenceKey(inviteToken, presence.clientId), JSON.stringify(presence), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    token: getToken(),
-  });
-}
-
-export async function deletePushPresence(inviteToken: string, clientId: string): Promise<void> {
-  try {
-    await del(getPushPresenceKey(inviteToken, clientId), { token: getToken() });
-  } catch {
-    // ignore
-  }
-}
-
-export async function listPushPresence(inviteToken: string): Promise<PushPresence[]> {
-  const result = await list({ prefix: `push/${inviteToken}/presence/`, token: getToken() });
-  const presenceItems: PushPresence[] = [];
-
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith('.json')) continue;
-    try {
-      const headResult = await head(blob.pathname, { token: getToken() });
-      if (!headResult) continue;
-      const presence = await fetchBlobJson<PushPresence>(headResult.url);
-      if (!presence) continue;
-      presenceItems.push(presence);
-    } catch {
-      // ignore
-    }
-  }
-
-  return presenceItems;
-}
-
-// List all chats for a bot
 export async function listBotChats(botId: number): Promise<ChatMeta[]> {
-  const result = await list({ prefix: `chats/${botId}_`, token: getToken() });
-  const chats: ChatMeta[] = [];
-  
-  for (const blob of result.blobs) {
-    if (!blob.pathname.endsWith('/meta.json')) continue;
-    try {
-      const headResult = await head(blob.pathname, { token: getToken() });
-      if (!headResult) continue;
-      const meta = await fetchBlobJson<ChatMeta>(headResult.url);
-      if (!meta) continue;
-      chats.push(meta);
-    } catch {
-      // ignore
-    }
-  }
-  
-  return chats.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<ChatRow[]>`
+    select *
+    from chats
+    where bot_id = ${botId}
+    order by updated_at desc
+  `;
+
+  return rows.map(mapChat);
+}
+
+export async function savePushSubscription(botId: number, subscription: StoredPushSubscription): Promise<void> {
+  await initDb();
+  const sql = getSql();
+
+  await sql`
+    insert into push_subscriptions (id, bot_id, endpoint, p256dh, auth, created_at, updated_at)
+    values (
+      ${subscription.id},
+      ${botId},
+      ${subscription.endpoint},
+      ${subscription.keys.p256dh},
+      ${subscription.keys.auth},
+      ${subscription.createdAt},
+      ${subscription.updatedAt}
+    )
+    on conflict (id) do update set
+      endpoint = excluded.endpoint,
+      p256dh = excluded.p256dh,
+      auth = excluded.auth,
+      updated_at = excluded.updated_at
+  `;
+}
+
+export async function deletePushSubscription(botId: number, subscriptionId: string): Promise<void> {
+  await initDb();
+  const sql = getSql();
+  await sql`delete from push_subscriptions where bot_id = ${botId} and id = ${subscriptionId}`;
+}
+
+export async function listPushSubscriptions(botId: number): Promise<StoredPushSubscription[]> {
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<PushSubscriptionRow[]>`
+    select id, endpoint, p256dh, auth, created_at, updated_at
+    from push_subscriptions
+    where bot_id = ${botId}
+    order by updated_at desc
+  `;
+
+  return rows.map((row) => ({
+    id: row.id,
+    endpoint: row.endpoint,
+    keys: {
+      p256dh: row.p256dh,
+      auth: row.auth,
+    },
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
+  }));
+}
+
+export async function savePushPresence(botId: number, presence: PushPresence): Promise<void> {
+  await initDb();
+  const sql = getSql();
+
+  await sql`
+    insert into push_presence (bot_id, client_id, subscription_id, active_chat_id, updated_at)
+    values (
+      ${botId},
+      ${presence.clientId},
+      ${presence.subscriptionId},
+      ${presence.activeChatId ?? null},
+      ${presence.updatedAt}
+    )
+    on conflict (bot_id, client_id) do update set
+      subscription_id = excluded.subscription_id,
+      active_chat_id = excluded.active_chat_id,
+      updated_at = excluded.updated_at
+  `;
+}
+
+export async function deletePushPresence(botId: number, clientId: string): Promise<void> {
+  await initDb();
+  const sql = getSql();
+  await sql`delete from push_presence where bot_id = ${botId} and client_id = ${clientId}`;
+}
+
+export async function listPushPresence(botId: number): Promise<PushPresence[]> {
+  await initDb();
+  const sql = getSql();
+
+  const rows = await sql<PushPresenceRow[]>`
+    select client_id, subscription_id, active_chat_id, updated_at
+    from push_presence
+    where bot_id = ${botId}
+  `;
+
+  return rows.map((row) => ({
+    clientId: row.client_id,
+    subscriptionId: row.subscription_id ?? '',
+    activeChatId: row.active_chat_id === null ? null : toNumber(row.active_chat_id),
+    updatedAt: toIsoString(row.updated_at),
+  }));
 }

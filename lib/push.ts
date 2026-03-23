@@ -66,6 +66,7 @@ function hasActiveChatPresence(
 }
 
 export async function sendChatPushNotifications(
+  botId: number,
   inviteToken: string,
   chatId: number,
   partnerName: string,
@@ -73,8 +74,8 @@ export async function sendChatPushNotifications(
 ) {
   ensureConfigured();
 
-  const subscriptions = await listPushSubscriptions(inviteToken);
-  const presenceItems = await listPushPresence(inviteToken);
+  const subscriptions = await listPushSubscriptions(botId);
+  const presenceItems = await listPushPresence(botId);
   const body = message.text || 'Фото';
 
   await Promise.all(subscriptions.map(async (subscription) => {
@@ -98,7 +99,7 @@ export async function sendChatPushNotifications(
         : 0;
 
       if (statusCode === 404 || statusCode === 410) {
-        await deletePushSubscription(inviteToken, subscription.id);
+        await deletePushSubscription(botId, subscription.id);
       }
     }
   }));

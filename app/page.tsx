@@ -3,17 +3,21 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-export default function Home() {
-  const [darkMode, setDarkMode] = useState(false);
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
-  useEffect(() => {
-    const stored = localStorage.getItem('darkMode');
-    if (stored !== null) {
-      setDarkMode(stored === 'true');
-    } else {
-      setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-  }, []);
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) {
+    return stored === 'true';
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+export default function Home() {
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);

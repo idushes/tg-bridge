@@ -4,6 +4,19 @@ import { useEffect, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
 import { useChatNotifications } from './useChatNotifications';
 
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) {
+    return stored === 'true';
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 interface ChatListClientProps {
   token: string;
   botName: string;
@@ -11,19 +24,9 @@ interface ChatListClientProps {
 }
 
 export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
 
   useChatNotifications({ token });
-
-  useEffect(() => {
-    const stored = localStorage.getItem('darkMode');
-    if (stored !== null) {
-      setDarkMode(stored === 'true');
-      return;
-    }
-
-    setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);

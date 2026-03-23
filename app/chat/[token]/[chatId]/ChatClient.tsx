@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Message } from '@/lib/types';
 import { useChatNotifications } from '../useChatNotifications';
 
@@ -8,6 +8,34 @@ interface PendingMessage {
   clientId: string;
   optimisticMessage: Message;
   serverMessage?: Message;
+}
+
+function getMaxSeq(messages: Message[]) {
+  return messages.reduce((max, message) => Math.max(max, message.seq ?? 0), 0);
+}
+
+function upsertMessage(messages: Message[], nextMessage: Message) {
+  const existingIndex = messages.findIndex((message) => message.id === nextMessage.id);
+  if (existingIndex === -1) {
+    return [...messages, nextMessage].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+  }
+
+  const updated = [...messages];
+  updated[existingIndex] = nextMessage;
+  return updated.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
+}
+
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) {
+    return stored === 'true';
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 interface ChatClientProps {
@@ -23,10 +51,12 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [hydrated, setHydrated] = useState(false);
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
   const previousMessageCountRef = useRef(initialMessages.length);
+  const latestSeqRef = useRef(getMaxSeq(initialMessages));
+  const reconnectTimeoutRef = useRef<number | null>(null);
   const viewportRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,15 +93,6 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   useChatNotifications({ token: inviteToken, currentChatId: chatId });
 
   useEffect(() => {
-    const stored = localStorage.getItem('darkMode');
-    if (stored !== null) {
-      setDarkMode(stored === 'true');
-    } else {
-      setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-  }, []);
-
-  useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
@@ -79,7 +100,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
     setHydrated(true);
   }, []);
 
-  const pollMessages = async () => {
+  const syncMessages = useCallback(async () => {
     try {
       const response = await fetch(
         `/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}&t=${Date.now()}`,
@@ -88,6 +109,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
+        latestSeqRef.current = getMaxSeq(data.messages);
         setPendingMessages((current) => {
           const serverIds = new Set<string>(data.messages.map((message: Message) => message.id));
           return current.filter((pending) => {
@@ -102,13 +124,69 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
     } catch (error) {
       console.error('Error polling messages:', error);
     }
-  };
+  }, [botId, chatId, inviteToken]);
 
   useEffect(() => {
-    pollMessages();
-    const interval = setInterval(pollMessages, 1000);
-    return () => clearInterval(interval);
-  }, [inviteToken, botId, chatId]);
+    void syncMessages();
+
+    let closed = false;
+    let source: EventSource | null = null;
+
+    const closeSource = () => {
+      source?.close();
+      source = null;
+    };
+
+    const connect = () => {
+      if (document.visibilityState !== 'visible' || source) {
+        return;
+      }
+
+      source = new EventSource(
+        `/api/chats/${chatId}/events?inviteToken=${inviteToken}&lastSeq=${latestSeqRef.current}`
+      );
+
+      source.addEventListener('message', ((event: MessageEvent<string>) => {
+        const nextMessage = JSON.parse(event.data) as Message;
+        latestSeqRef.current = Math.max(latestSeqRef.current, nextMessage.seq ?? 0);
+        setMessages((current) => upsertMessage(current, nextMessage));
+      }) as EventListener);
+
+      source.onerror = () => {
+        closeSource();
+        if (closed) {
+          return;
+        }
+
+        reconnectTimeoutRef.current = window.setTimeout(() => {
+          void syncMessages();
+          connect();
+        }, 3000);
+      };
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncMessages();
+        connect();
+        return;
+      }
+
+      closeSource();
+    };
+
+    connect();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      closed = true;
+      closeSource();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (reconnectTimeoutRef.current !== null) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [chatId, inviteToken, syncMessages]);
 
   useEffect(() => {
     const hasNewMessages = visibleMessages.length > previousMessageCountRef.current;
@@ -199,7 +277,8 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
           };
         }));
 
-        void pollMessages();
+        setMessages((current) => upsertMessage(current, data.message));
+        latestSeqRef.current = Math.max(latestSeqRef.current, data.message.seq ?? 0);
       } else {
         const data = await response.json();
         setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));

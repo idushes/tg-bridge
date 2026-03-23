@@ -70,7 +70,7 @@ export async function POST(
       botId: botIdNum,
     };
 
-    await addMessageToChat(botIdNum, messageData.chatId, message, existingChat.messageLimit);
+    const savedMessage = await addMessageToChat(botIdNum, messageData.chatId, message, existingChat.messageLimit);
 
     // Update chat metadata
     const updatedMeta: ChatMeta = {
@@ -80,10 +80,11 @@ export async function POST(
     await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
 
     await sendChatPushNotifications(
+      botIdNum,
       botConfig.inviteToken,
       messageData.chatId,
       updatedMeta.participantFirstName || updatedMeta.participantUsername || updatedMeta.participantName,
-      message
+      savedMessage
     );
 
     return NextResponse.json({ ok: true });

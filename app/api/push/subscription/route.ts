@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const normalized = normalizePushSubscription(body.subscription);
-    await savePushSubscription(body.inviteToken, normalized);
+    await savePushSubscription(chatData.botId, normalized);
 
     return NextResponse.json({ success: true, subscriptionId: normalized.id });
   } catch (error) {
@@ -46,7 +46,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
     }
 
-    await deletePushSubscription(body.inviteToken, getPushSubscriptionId(body.endpoint));
+    await deletePushSubscription(chatData.botId, getPushSubscriptionId(body.endpoint));
 
     return NextResponse.json({ success: true });
   } catch {

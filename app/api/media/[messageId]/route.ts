@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatByInviteToken, getChatMessages, getBotConfig } from '@/lib/blob';
+import { getChatByInviteToken, getMessageById, getBotConfig } from '@/lib/blob';
 import { downloadFile, getFile } from '@/lib/telegram';
 
 export async function GET(
@@ -10,9 +10,8 @@ export async function GET(
   const url = new URL(request.url);
   const inviteToken = url.searchParams.get('inviteToken');
   const botId = url.searchParams.get('botId');
-  const participantChatId = url.searchParams.get('chatId');
 
-  if (!inviteToken || !botId || !participantChatId) {
+  if (!inviteToken || !botId) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
   }
 
@@ -21,8 +20,11 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
   }
 
-  const messages = await getChatMessages(chatData.botId, parseInt(participantChatId));
-  const message = messages.messages.find(m => m.id === messageId);
+  if (chatData.botId !== parseInt(botId)) {
+    return NextResponse.json({ error: 'Invalid bot' }, { status: 403 });
+  }
+
+  const message = await getMessageById(messageId);
 
   if (!message || !message.mediaFileId) {
     return NextResponse.json({ error: 'Media not found' }, { status: 404 });

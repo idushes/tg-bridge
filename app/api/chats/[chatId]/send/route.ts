@@ -74,9 +74,9 @@ export async function POST(
     const chatMeta = await getChatMeta(chatData.botId, participantChatId);
     const messageLimit = chatMeta?.messageLimit ?? parseInt(process.env.DEFAULT_MESSAGE_LIMIT || '100');
 
-    await addMessageToChat(chatData.botId, participantChatId, message, messageLimit);
+    const savedMessage = await addMessageToChat(chatData.botId, participantChatId, message, messageLimit);
 
-    return NextResponse.json({ success: true, message });
+    return NextResponse.json({ success: true, message: savedMessage });
   } catch (error) {
     console.error('Error sending message:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

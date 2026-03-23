@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBotConfig, listBotChats, getChatMessages, getChatByInviteToken } from '@/lib/blob';
+import { getChatMessages, getChatByInviteToken } from '@/lib/blob';
 
 // GET /api/chats/[chatId]?botId=123 - get chat messages
 // chatId here is participantChatId

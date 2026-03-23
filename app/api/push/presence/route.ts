@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     };
 
-    await savePushPresence(body.inviteToken, presence);
+    await savePushPresence(chatData.botId, presence);
 
     return NextResponse.json({ success: true });
   } catch {
@@ -46,7 +46,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing inviteToken or clientId' }, { status: 400 });
     }
 
-    await deletePushPresence(body.inviteToken, body.clientId);
+    const chatData = await getChatByInviteToken(body.inviteToken);
+    if (!chatData) {
+      return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
+    }
+
+    await deletePushPresence(chatData.botId, body.clientId);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
