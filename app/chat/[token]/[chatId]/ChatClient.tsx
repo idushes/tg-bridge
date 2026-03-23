@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Message } from '@/lib/types';
+import type { ChatMeta, Message } from '@/lib/types';
+import { useChatNotifications } from '../useChatNotifications';
 
 interface PendingMessage {
   clientId: string;
@@ -15,9 +16,10 @@ interface ChatClientProps {
   chatId: number;
   initialMessages: Message[];
   partnerName: string;
+  initialChats: ChatMeta[];
 }
 
-export default function ChatClient({ inviteToken, botId, chatId, initialMessages, partnerName }: ChatClientProps) {
+export default function ChatClient({ inviteToken, botId, chatId, initialMessages, partnerName, initialChats }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -58,6 +60,8 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
       URL.revokeObjectURL(message.mediaUrl);
     }
   };
+
+  useChatNotifications({ token: inviteToken, initialChats, currentChatId: chatId });
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');

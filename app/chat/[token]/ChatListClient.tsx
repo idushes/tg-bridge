@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
+import { useChatNotifications } from './useChatNotifications';
 
 interface ChatListClientProps {
   token: string;
@@ -11,6 +12,8 @@ interface ChatListClientProps {
 
 export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(false);
+
+  useChatNotifications({ token, initialChats: chats });
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
