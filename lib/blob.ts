@@ -1,5 +1,12 @@
 import { put, del, list, head } from '@vercel/blob';
-import type { BotConfig, ChatMeta, ChatMessages, Message } from './types';
+import type {
+  BotConfig,
+  ChatMeta,
+  ChatMessages,
+  Message,
+  PushPresence,
+  StoredPushSubscription,
+} from './types';
 
 function getToken(): string {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
@@ -76,6 +83,14 @@ export async function listUserBots(ownerTelegramId: number): Promise<BotConfig[]
 // Chat operations - using botId_participantChatId as key
 function getChatKey(botId: number, participantChatId: number): string {
   return `chats/${botId}_${participantChatId}`;
+}
+
+function getPushSubscriptionKey(inviteToken: string, subscriptionId: string): string {
+  return `push/${inviteToken}/subscriptions/${subscriptionId}.json`;
+}
+
+function getPushPresenceKey(inviteToken: string, clientId: string): string {
+  return `push/${inviteToken}/presence/${clientId}.json`;
 }
 
 export async function saveChatMeta(botId: number, participantChatId: number, meta: ChatMeta): Promise<void> {
@@ -163,6 +178,82 @@ export async function deleteChatData(botId: number, participantChatId: number): 
   } catch {
     // ignore
   }
+}
+
+export async function savePushSubscription(inviteToken: string, subscription: StoredPushSubscription): Promise<void> {
+  await put(getPushSubscriptionKey(inviteToken, subscription.id), JSON.stringify(subscription), {
+    contentType: 'application/json',
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    token: getToken(),
+  });
+}
+
+export async function deletePushSubscription(inviteToken: string, subscriptionId: string): Promise<void> {
+  try {
+    await del(getPushSubscriptionKey(inviteToken, subscriptionId), { token: getToken() });
+  } catch {
+    // ignore
+  }
+}
+
+export async function listPushSubscriptions(inviteToken: string): Promise<StoredPushSubscription[]> {
+  const result = await list({ prefix: `push/${inviteToken}/subscriptions/`, token: getToken() });
+  const subscriptions: StoredPushSubscription[] = [];
+
+  for (const blob of result.blobs) {
+    if (!blob.pathname.endsWith('.json')) continue;
+    try {
+      const headResult = await head(blob.pathname, { token: getToken() });
+      if (!headResult) continue;
+      const subscription = await fetchBlobJson<StoredPushSubscription>(headResult.url);
+      if (!subscription) continue;
+      subscriptions.push(subscription);
+    } catch {
+      // ignore
+    }
+  }
+
+  return subscriptions;
+}
+
+export async function savePushPresence(inviteToken: string, presence: PushPresence): Promise<void> {
+  await put(getPushPresenceKey(inviteToken, presence.clientId), JSON.stringify(presence), {
+    contentType: 'application/json',
+    access: 'private',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    token: getToken(),
+  });
+}
+
+export async function deletePushPresence(inviteToken: string, clientId: string): Promise<void> {
+  try {
+    await del(getPushPresenceKey(inviteToken, clientId), { token: getToken() });
+  } catch {
+    // ignore
+  }
+}
+
+export async function listPushPresence(inviteToken: string): Promise<PushPresence[]> {
+  const result = await list({ prefix: `push/${inviteToken}/presence/`, token: getToken() });
+  const presenceItems: PushPresence[] = [];
+
+  for (const blob of result.blobs) {
+    if (!blob.pathname.endsWith('.json')) continue;
+    try {
+      const headResult = await head(blob.pathname, { token: getToken() });
+      if (!headResult) continue;
+      const presence = await fetchBlobJson<PushPresence>(headResult.url);
+      if (!presence) continue;
+      presenceItems.push(presence);
+    } catch {
+      // ignore
+    }
+  }
+
+  return presenceItems;
 }
 
 // List all chats for a bot

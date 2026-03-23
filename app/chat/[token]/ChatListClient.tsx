@@ -13,7 +13,7 @@ interface ChatListClientProps {
 export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(false);
 
-  useChatNotifications({ token, initialChats: chats });
+  useChatNotifications({ token });
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');

@@ -35,6 +35,24 @@ export interface Message {
   botId?: number;
 }
 
+export interface StoredPushSubscription {
+  id: string;
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PushPresence {
+  clientId: string;
+  subscriptionId: string;
+  activeChatId: number | null;
+  updatedAt: string;
+}
+
 export interface TelegramUpdate {
   update_id: number;
   message?: {

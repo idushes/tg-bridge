@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBotConfig, getChatMeta, saveChatMeta, addMessageToChat } from '@/lib/blob';
+import { sendChatPushNotifications } from '@/lib/push';
 import { extractMessageFromUpdate } from '@/lib/telegram';
 import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -77,6 +78,13 @@ export async function POST(
       updatedAt: new Date().toISOString(),
     };
     await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
+
+    await sendChatPushNotifications(
+      botConfig.inviteToken,
+      messageData.chatId,
+      updatedMeta.participantFirstName || updatedMeta.participantUsername || updatedMeta.participantName,
+      message
+    );
 
     return NextResponse.json({ ok: true });
   } catch (error) {
