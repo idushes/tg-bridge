@@ -28,6 +28,7 @@ export async function saveBotConfig(botId: number, config: BotConfig): Promise<v
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    allowOverwrite: true,
     token: getToken(),
   });
 }
@@ -82,6 +83,7 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    allowOverwrite: true,
     token: getToken(),
   });
 }
@@ -133,6 +135,7 @@ export async function saveChatMessages(botId: number, participantChatId: number,
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    allowOverwrite: true,
     token: getToken(),
   });
 }
