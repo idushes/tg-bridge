@@ -34,7 +34,10 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
 
   const pollMessages = async () => {
     try {
-      const response = await fetch(`/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}`);
+      const response = await fetch(
+        `/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}&t=${Date.now()}`,
+        { cache: 'no-store' }
+      );
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
@@ -45,6 +48,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   };
 
   useEffect(() => {
+    pollMessages();
     const interval = setInterval(pollMessages, 3000);
     return () => clearInterval(interval);
   }, [inviteToken, botId, chatId]);

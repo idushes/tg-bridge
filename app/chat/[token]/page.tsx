@@ -1,4 +1,6 @@
-import { getChatByInviteToken, listBotChats, getChatMessages } from '@/lib/blob';
+import { getChatByInviteToken, listBotChats } from '@/lib/blob';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ChatPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

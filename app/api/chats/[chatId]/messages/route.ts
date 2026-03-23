@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChatMessages, getChatByInviteToken } from '@/lib/blob';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/chats/[chatId]/messages?inviteToken=xxx
 // Get messages for a chat via invite token
 export async function GET(
