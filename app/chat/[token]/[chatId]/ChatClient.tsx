@@ -16,8 +16,14 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const formatTime = (timestamp: string) => new Date(timestamp).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -31,6 +37,10 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const pollMessages = async () => {
     try {
@@ -49,7 +59,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
 
   useEffect(() => {
     pollMessages();
-    const interval = setInterval(pollMessages, 3000);
+    const interval = setInterval(pollMessages, 1000);
     return () => clearInterval(interval);
   }, [inviteToken, botId, chatId]);
 
@@ -60,15 +70,25 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return;
 
+    const text = newMessage.trim();
     setSending(true);
     try {
       const response = await fetch(`/api/chats/${chatId}/send?inviteToken=${inviteToken}&botId=${botId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newMessage }),
+        body: JSON.stringify({ text }),
       });
 
       if (response.ok) {
+        setMessages((current) => ([
+          ...current,
+          {
+            id: `local-${Date.now()}`,
+            text,
+            from: 'user',
+            timestamp: new Date().toISOString(),
+          },
+        ]));
         setNewMessage('');
         await pollMessages();
       } else {
@@ -170,13 +190,13 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
                   </div>
                 )}
                 
-                <p className={`text-xs mt-1 ${
-                  message.from === 'user' ? 'text-blue-200' : 'text-zinc-400'
-                }`}>
-                  {new Date(message.timestamp).toLocaleTimeString('ru-RU', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                <p
+                  suppressHydrationWarning
+                  className={`text-xs mt-1 ${
+                    message.from === 'user' ? 'text-blue-200' : 'text-zinc-400'
+                  }`}
+                >
+                  {hydrated ? formatTime(message.timestamp) : ''}
                 </p>
               </div>
             </div>

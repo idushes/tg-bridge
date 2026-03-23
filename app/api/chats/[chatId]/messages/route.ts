@@ -27,7 +27,10 @@ export async function GET(
     }
     
     const messages = await getChatMessages(chatData.botId, participantChatId);
-    return NextResponse.json({ messages: messages.messages });
+    return NextResponse.json(
+      { messages: messages.messages },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    );
   }
 
   if (!botId) {
@@ -35,5 +38,8 @@ export async function GET(
   }
 
   const messages = await getChatMessages(parseInt(botId), participantChatId);
-  return NextResponse.json({ messages: messages.messages });
+  return NextResponse.json(
+    { messages: messages.messages },
+    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+  );
 }
