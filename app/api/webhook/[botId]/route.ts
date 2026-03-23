@@ -38,7 +38,7 @@ export async function POST(
       const newChat: ChatMeta = {
         botId: botIdNum,
         participantChatId: messageData.chatId,
-        participantName: messageData.text?.substring(0, 50) || 'New Chat',
+        participantName: update.message?.from?.first_name || update.message?.from?.username || 'User',
         participantFirstName: update.message?.from?.first_name,
         participantLastName: update.message?.from?.last_name,
         participantUsername: update.message?.from?.username,
@@ -48,6 +48,18 @@ export async function POST(
       };
       await saveChatMeta(botIdNum, messageData.chatId, newChat);
       existingChat = newChat;
+    }
+
+    // Filter out commands like /start
+    const isCommand = messageData.text?.startsWith('/');
+    if (isCommand) {
+      // Just update chat timestamp, don't save command
+      const updatedMeta: ChatMeta = {
+        ...existingChat,
+        updatedAt: new Date().toISOString(),
+      };
+      await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
+      return NextResponse.json({ ok: true });
     }
 
     const message: Message = {
