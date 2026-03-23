@@ -1,12 +1,24 @@
 import { put, del, list, head } from '@vercel/blob';
 import type { BotConfig, ChatMeta, ChatMessages, Message } from './types';
 
+function getToken(): string {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error('BLOB_READ_WRITE_TOKEN is not set');
+  }
+  return token;
+}
+
 async function fetchJson<T>(pathname: string): Promise<T | null> {
   try {
-    const result = await head(pathname);
+    const result = await head(pathname, { token: getToken() });
     if (!result) return null;
 
-    const response = await fetch(result.url);
+    const response = await fetch(result.url, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      },
+    });
     if (!response.ok) return null;
     return await response.json() as T;
   } catch {
@@ -19,6 +31,7 @@ export async function saveBotConfig(botId: number, config: BotConfig): Promise<v
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    token: getToken(),
   });
 }
 
@@ -28,7 +41,7 @@ export async function getBotConfig(botId: number): Promise<BotConfig | null> {
 
 export async function deleteBotConfig(botId: number): Promise<void> {
   try {
-    await del(`bots/${botId}/config.json`);
+    await del(`bots/${botId}/config.json`, { token: getToken() });
   } catch {
     // ignore
   }
@@ -39,6 +52,7 @@ export async function saveChatMeta(inviteToken: string, meta: ChatMeta): Promise
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    token: getToken(),
   });
 }
 
@@ -48,7 +62,7 @@ export async function getChatMeta(inviteToken: string): Promise<ChatMeta | null>
 
 export async function deleteChatMeta(inviteToken: string): Promise<void> {
   try {
-    await del(`chats/${inviteToken}/meta.json`);
+    await del(`chats/${inviteToken}/meta.json`, { token: getToken() });
   } catch {
     // ignore
   }
@@ -64,6 +78,7 @@ export async function saveChatMessages(inviteToken: string, messages: ChatMessag
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    token: getToken(),
   });
 }
 
@@ -84,15 +99,15 @@ export async function addMessageToChat(
 
 export async function deleteChatData(inviteToken: string): Promise<void> {
   try {
-    await del(`chats/${inviteToken}/meta.json`);
-    await del(`chats/${inviteToken}/messages.json`);
+    await del(`chats/${inviteToken}/meta.json`, { token: getToken() });
+    await del(`chats/${inviteToken}/messages.json`, { token: getToken() });
   } catch {
     // ignore
   }
 }
 
 export async function listUserBots(ownerTelegramId: number): Promise<BotConfig[]> {
-  const result = await list({ prefix: 'bots/' });
+  const result = await list({ prefix: 'bots/', token: getToken() });
   const bots: BotConfig[] = [];
   
   for (const blob of result.blobs) {
@@ -110,7 +125,7 @@ export async function listUserChats(ownerTelegramId: number): Promise<ChatMeta[]
   const bots = await listUserBots(ownerTelegramId);
   const botIds = new Set(bots.map(b => b.botId));
   
-  const result = await list({ prefix: 'chats/' });
+  const result = await list({ prefix: 'chats/', token: getToken() });
   const chats: ChatMeta[] = [];
   
   for (const blob of result.blobs) {
