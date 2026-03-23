@@ -32,7 +32,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               function onTelegramAuth(user) {
-                localStorage.setItem('telegram_id', user.id);
+                localStorage.setItem('telegram_id', user.id.toString());
                 localStorage.setItem('telegram_name', user.first_name || user.username || 'Пользователь');
                 window.location.reload();
               }
