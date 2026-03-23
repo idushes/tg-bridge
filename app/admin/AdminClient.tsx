@@ -82,12 +82,20 @@ export default function AdminClient() {
     const widget = (window as unknown as { Telegram?: { Login?: { auth: (config: { bot_id: string; request_access: string; return_url: string }, callback: (user: unknown) => void) => void } } }).Telegram;
     
     if (!widget?.Login?.auth) {
-      alert('Telegram widget not loaded. Add Telegram Login script to layout.');
+      alert('Telegram виджет не загружен. Подождите немного и попробуйте снова.');
+      return;
+    }
+
+    const script = document.querySelector('script[src*="telegram-widget.js"]');
+    const botId = script?.getAttribute('data-telegram-login');
+    
+    if (!botId) {
+      alert('Не удалось получить ID бота. Проверьте настройки.');
       return;
     }
     
     widget.Login.auth({
-      bot_id: process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || '',
+      bot_id: botId,
       request_access: 'write',
       return_url: window.location.href,
     }, (telegramUser: unknown) => {
@@ -210,8 +218,6 @@ export default function AdminClient() {
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
-          
-          <script async src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || 'your_bot_username'} data-request-access="write" data-auth-url={typeof window !== 'undefined' ? window.location.href : ''}></script>
           
           <button
             onClick={handleTelegramLogin}
