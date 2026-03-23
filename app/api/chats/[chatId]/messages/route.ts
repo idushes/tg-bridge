@@ -1,17 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatMeta, getChatMessages } from '@/lib/blob';
+import { getChatMessages, getChatByInviteToken } from '@/lib/blob';
 
+// GET /api/chats/[chatId]/messages?inviteToken=xxx
+// Get messages for a chat via invite token
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ chatId: string }> }
 ) {
   const { chatId } = await params;
-  const meta = await getChatMeta(chatId);
+  const participantChatId = parseInt(chatId);
   
-  if (!meta) {
-    return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+  if (isNaN(participantChatId)) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
   }
 
-  const messages = await getChatMessages(chatId);
+  const { searchParams } = new URL(request.url);
+  const botId = searchParams.get('botId');
+  const inviteToken = searchParams.get('inviteToken');
+
+  if (inviteToken) {
+    const chatData = await getChatByInviteToken(inviteToken);
+    if (!chatData) {
+      return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
+    }
+    
+    const messages = await getChatMessages(chatData.botId, participantChatId);
+    return NextResponse.json({ messages: messages.messages });
+  }
+
+  if (!botId) {
+    return NextResponse.json({ error: 'Missing botId or inviteToken' }, { status: 400 });
+  }
+
+  const messages = await getChatMessages(parseInt(botId), participantChatId);
   return NextResponse.json({ messages: messages.messages });
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteBotConfig, getBotConfig, listUserChats, deleteChatData } from '@/lib/blob';
+import { deleteBotConfig, getBotConfig, listBotChats, deleteChatData } from '@/lib/blob';
 import { deleteWebhook } from '@/lib/telegram';
 
 export async function DELETE(
@@ -27,11 +27,10 @@ export async function DELETE(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const chats = await listUserChats(parseInt(telegramId));
+  // Delete all chats for this bot
+  const chats = await listBotChats(botIdNum);
   for (const chat of chats) {
-    if (chat.botId === botIdNum) {
-      await deleteChatData(chat.inviteToken);
-    }
+    await deleteChatData(botIdNum, chat.participantChatId);
   }
 
   await deleteWebhook(botConfig.botToken);

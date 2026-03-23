@@ -1,33 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Script from 'next/script';
 import type { BotConfig, ChatMeta } from '@/lib/types';
 import Link from 'next/link';
 
 interface BotWithChats extends BotConfig {
   chats: ChatMeta[];
-}
-
-function TelegramLoginButton() {
-  useEffect(() => {
-    const botId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
-    if (!botId) return;
-
-    const container = document.getElementById('telegram-login-btn');
-    if (!container || container.children.length > 0) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?21';
-    script.setAttribute('data-telegram-login', botId);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '10');
-    script.setAttribute('data-request-access', 'write');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.async = true;
-    container.appendChild(script);
-  }, []);
-
-  return <div id="telegram-login-btn" />;
 }
 
 export default function AdminClient() {
@@ -36,7 +15,6 @@ export default function AdminClient() {
   const [bots, setBots] = useState<BotWithChats[]>([]);
   const [showAddBot, setShowAddBot] = useState(false);
   const [botToken, setBotToken] = useState('');
-  const [partnerName, setPartnerName] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [darkMode, setDarkMode] = useState(false);
@@ -83,14 +61,13 @@ export default function AdminClient() {
         
         const botsWithChats: BotWithChats[] = [];
         for (const bot of data.bots) {
-          const chatsResponse = await fetch('/api/chats', {
+          const chatsResponse = await fetch(`/api/chats?botId=${bot.botId}`, {
             headers: { 'x-telegram-id': tgId.toString() },
           });
           
           if (chatsResponse.ok) {
             const chatsData = await chatsResponse.json();
-            const botChats = chatsData.chats.filter((c: ChatMeta) => c.botId === bot.botId);
-            botsWithChats.push({ ...bot, chats: botChats });
+            botsWithChats.push({ ...bot, chats: chatsData.chats });
           }
         }
         
@@ -133,8 +110,8 @@ export default function AdminClient() {
   };
 
   const addBot = async () => {
-    if (!botToken || !partnerName) {
-      setError('Заполните все поля');
+    if (!botToken) {
+      setError('Введите токен бота');
       return;
     }
 
@@ -149,7 +126,7 @@ export default function AdminClient() {
           'Content-Type': 'application/json',
           'x-telegram-id': tgId || '',
         },
-        body: JSON.stringify({ botToken, partnerName }),
+        body: JSON.stringify({ botToken }),
       });
 
       const data = await response.json();
@@ -160,7 +137,6 @@ export default function AdminClient() {
       }
 
       setBotToken('');
-      setPartnerName('');
       setShowAddBot(false);
       await fetchBots(parseInt(tgId!));
     } catch (err) {
@@ -184,34 +160,8 @@ export default function AdminClient() {
     }
   };
 
-  const regenerateLink = async (chatId: string) => {
-    const tgId = localStorage.getItem('telegram_id');
-    const response = await fetch(`/api/chats/${chatId}`, {
-      method: 'PATCH',
-      headers: { 'x-telegram-id': tgId || '' },
-      body: JSON.stringify({ regenerateLink: true }),
-    });
-
-    if (response.ok) {
-      await fetchBots(parseInt(tgId!));
-    }
-  };
-
-  const deleteChat = async (chatId: string) => {
-    if (!confirm('Удалить чат?')) return;
-
-    const tgId = localStorage.getItem('telegram_id');
-    const response = await fetch(`/api/chats/${chatId}`, {
-      method: 'DELETE',
-      headers: { 'x-telegram-id': tgId || '' },
-    });
-
-    if (response.ok) {
-      await fetchBots(parseInt(tgId!));
-    }
-  };
-
-  const copyLink = (url: string) => {
+  const copyLink = (inviteToken: string) => {
+    const url = `${window.location.origin}/chat/${inviteToken}`;
     navigator.clipboard.writeText(url);
     alert('Ссылка скопирована!');
   };
@@ -243,7 +193,7 @@ export default function AdminClient() {
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
           
           <div className="flex justify-center mb-4">
-            <TelegramLoginButton />
+            <div id="telegram-login-btn" />
           </div>
           
           <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
@@ -321,19 +271,6 @@ export default function AdminClient() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                  Имя родителя
-                </label>
-                <input
-                  type="text"
-                  value={partnerName}
-                  onChange={(e) => setPartnerName(e.target.value)}
-                  placeholder="Мама, Папа, Бабушка..."
-                  className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              
               <div className="flex gap-2">
                 <button
                   onClick={addBot}
@@ -347,7 +284,6 @@ export default function AdminClient() {
                     setShowAddBot(false);
                     setError('');
                     setBotToken('');
-      setPartnerName('');
                   }}
                   className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
                 >
@@ -385,41 +321,45 @@ export default function AdminClient() {
                   </button>
                 </div>
 
+                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Ссылка для родителя:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="text-sm text-zinc-900 dark:text-white flex-1 overflow-hidden text-ellipsis">
+                      {`${window.location.origin}/chat/${bot.inviteToken}`}
+                    </code>
+                    <button
+                      onClick={() => copyLink(bot.inviteToken)}
+                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                    >
+                      Копировать
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Чаты:</h4>
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Чаты ({bot.chats.length}):
+                  </h4>
                   {bot.chats.length === 0 ? (
-                    <p className="text-sm text-zinc-400">Нет чатов</p>
+                    <p className="text-sm text-zinc-400">
+                      Пока никто не писал боту. Отправьте /start боту в Telegram
+                    </p>
                   ) : (
                     bot.chats.map((chat) => (
                       <div
-                        key={chat.inviteToken}
+                        key={chat.participantChatId}
                         className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
                       >
                         <div>
-                          <p className="font-medium text-zinc-900 dark:text-white">{chat.partnerName}</p>
+                          <p className="font-medium text-zinc-900 dark:text-white">
+                            {chat.participantFirstName || chat.participantUsername || `Чат ${chat.participantChatId}`}
+                          </p>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                            Лимит: {chat.messageLimit} сообщений
+                            {chat.participantUsername && `@${chat.participantUsername}`}
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => copyLink(chat.inviteToken ? `${window.location.origin}/chat/${chat.inviteToken}` : '')}
-                            className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                          >
-                            Копировать ссылку
-                          </button>
-                          <button
-                            onClick={() => regenerateLink(chat.inviteToken)}
-                            className="px-3 py-1 text-sm bg-zinc-100 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-500 transition-colors"
-                          >
-                            Новую ссылку
-                          </button>
-                          <button
-                            onClick={() => deleteChat(chat.inviteToken)}
-                            className="px-3 py-1 text-sm text-red-500 hover:text-red-600"
-                          >
-                            Удалить
-                          </button>
+                        <div className="text-xs text-zinc-400">
+                          {new Date(chat.updatedAt).toLocaleDateString('ru-RU')}
                         </div>
                       </div>
                     ))

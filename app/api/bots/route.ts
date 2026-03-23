@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getBotInfo, setWebhook } from '@/lib/telegram';
-import { 
-  saveBotConfig, 
-  getBotConfig, 
-  listUserBots, 
-  saveChatMeta
-} from '@/lib/blob';
-import type { BotConfig, ChatMeta } from '@/lib/types';
+import { saveBotConfig, getBotConfig, listUserBots, saveChatMeta } from '@/lib/blob';
+import type { BotConfig } from '@/lib/types';
 
 const DEFAULT_MESSAGE_LIMIT = parseInt(process.env.DEFAULT_MESSAGE_LIMIT || '100');
 
@@ -29,10 +24,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { botToken, partnerName } = body;
+    const { botToken } = body;
 
-    if (!botToken || !partnerName) {
-      return NextResponse.json({ error: 'Missing botToken or partnerName' }, { status: 400 });
+    if (!botToken) {
+      return NextResponse.json({ error: 'Missing botToken' }, { status: 400 });
     }
 
     const botInfo = await getBotInfo(botToken);
@@ -46,34 +41,21 @@ export async function POST(request: NextRequest) {
     }
 
     const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook/${botInfo.id}`;
-    const webhookSet = await setWebhook(botToken, webhookUrl);
-    if (!webhookSet) {
-      console.error('Failed to set webhook for bot', botInfo.id);
-    }
+    await setWebhook(botToken, webhookUrl);
 
+    const inviteToken = uuidv4();
+    
     const config: BotConfig = {
       botToken,
       botId: botInfo.id,
       botUsername: botInfo.username,
       botName: botInfo.first_name,
       ownerTelegramId: parseInt(telegramId),
+      inviteToken,
       createdAt: new Date().toISOString(),
     };
 
     await saveBotConfig(botInfo.id, config);
-
-    const inviteToken = uuidv4();
-    const meta: ChatMeta = {
-      botId: botInfo.id,
-      inviteToken,
-      partnerName,
-      participantChatId: 0,
-      messageLimit: DEFAULT_MESSAGE_LIMIT,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    await saveChatMeta(inviteToken, meta);
 
     return NextResponse.json({ 
       success: true, 

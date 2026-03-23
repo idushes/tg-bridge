@@ -9,23 +9,7 @@ function getToken(): string {
   return token;
 }
 
-async function fetchJson<T>(pathname: string): Promise<T | null> {
-  try {
-    const result = await head(pathname, { token: getToken() });
-    if (!result) return null;
-
-    const response = await fetch(result.url, {
-      headers: {
-        'Authorization': `Bearer ${getToken()}`,
-      },
-    });
-    if (!response.ok) return null;
-    return await response.json() as T;
-  } catch {
-    return null;
-  }
-}
-
+// Bot configuration
 export async function saveBotConfig(botId: number, config: BotConfig): Promise<void> {
   await put(`bots/${botId}/config.json`, JSON.stringify(config), {
     contentType: 'application/json',
@@ -36,71 +20,22 @@ export async function saveBotConfig(botId: number, config: BotConfig): Promise<v
 }
 
 export async function getBotConfig(botId: number): Promise<BotConfig | null> {
-  return await fetchJson<BotConfig>(`bots/${botId}/config.json`);
+  try {
+    const result = await head(`bots/${botId}/config.json`, { token: getToken() });
+    if (!result) return null;
+    const response = await fetch(result.url, {
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+    });
+    if (!response.ok) return null;
+    return await response.json() as BotConfig;
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteBotConfig(botId: number): Promise<void> {
   try {
     await del(`bots/${botId}/config.json`, { token: getToken() });
-  } catch {
-    // ignore
-  }
-}
-
-export async function saveChatMeta(inviteToken: string, meta: ChatMeta): Promise<void> {
-  await put(`chats/${inviteToken}/meta.json`, JSON.stringify(meta), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    token: getToken(),
-  });
-}
-
-export async function getChatMeta(inviteToken: string): Promise<ChatMeta | null> {
-  return await fetchJson<ChatMeta>(`chats/${inviteToken}/meta.json`);
-}
-
-export async function deleteChatMeta(inviteToken: string): Promise<void> {
-  try {
-    await del(`chats/${inviteToken}/meta.json`, { token: getToken() });
-  } catch {
-    // ignore
-  }
-}
-
-export async function getChatMessages(inviteToken: string): Promise<ChatMessages> {
-  const result = await fetchJson<ChatMessages>(`chats/${inviteToken}/messages.json`);
-  return result ?? { messages: [] };
-}
-
-export async function saveChatMessages(inviteToken: string, messages: ChatMessages): Promise<void> {
-  await put(`chats/${inviteToken}/messages.json`, JSON.stringify(messages), {
-    contentType: 'application/json',
-    access: 'private',
-    addRandomSuffix: false,
-    token: getToken(),
-  });
-}
-
-export async function addMessageToChat(
-  inviteToken: string,
-  message: Message,
-  messageLimit: number
-): Promise<void> {
-  const chat = await getChatMessages(inviteToken);
-  chat.messages.push(message);
-  
-  if (chat.messages.length > messageLimit) {
-    chat.messages = chat.messages.slice(-messageLimit);
-  }
-  
-  await saveChatMessages(inviteToken, chat);
-}
-
-export async function deleteChatData(inviteToken: string): Promise<void> {
-  try {
-    await del(`chats/${inviteToken}/meta.json`, { token: getToken() });
-    await del(`chats/${inviteToken}/messages.json`, { token: getToken() });
   } catch {
     // ignore
   }
@@ -112,29 +47,146 @@ export async function listUserBots(ownerTelegramId: number): Promise<BotConfig[]
   
   for (const blob of result.blobs) {
     if (!blob.pathname.endsWith('/config.json')) continue;
-    const config = await fetchJson<BotConfig>(blob.pathname);
-    if (config && config.ownerTelegramId === ownerTelegramId) {
-      bots.push(config);
+    try {
+      const headResult = await head(blob.pathname, { token: getToken() });
+      if (!headResult) continue;
+      const response = await fetch(headResult.url, {
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+      });
+      if (!response.ok) continue;
+      const config = await response.json() as BotConfig;
+      if (config.ownerTelegramId === ownerTelegramId) {
+        bots.push(config);
+      }
+    } catch {
+      // ignore
     }
   }
   
   return bots;
 }
 
-export async function listUserChats(ownerTelegramId: number): Promise<ChatMeta[]> {
-  const bots = await listUserBots(ownerTelegramId);
-  const botIds = new Set(bots.map(b => b.botId));
+// Chat operations - using botId_participantChatId as key
+function getChatKey(botId: number, participantChatId: number): string {
+  return `chats/${botId}_${participantChatId}`;
+}
+
+export async function saveChatMeta(botId: number, participantChatId: number, meta: ChatMeta): Promise<void> {
+  await put(`${getChatKey(botId, participantChatId)}/meta.json`, JSON.stringify(meta), {
+    contentType: 'application/json',
+    access: 'private',
+    addRandomSuffix: false,
+    token: getToken(),
+  });
+}
+
+export async function getChatMeta(botId: number, participantChatId: number): Promise<ChatMeta | null> {
+  try {
+    const result = await head(`${getChatKey(botId, participantChatId)}/meta.json`, { token: getToken() });
+    if (!result) return null;
+    const response = await fetch(result.url, {
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+    });
+    if (!response.ok) return null;
+    return await response.json() as ChatMeta;
+  } catch {
+    return null;
+  }
+}
+
+// Get chat by invite token (for parent web interface)
+export async function getChatByInviteToken(inviteToken: string): Promise<{ botId: number; config: BotConfig } | null> {
+  const result = await list({ prefix: 'bots/', token: getToken() });
   
-  const result = await list({ prefix: 'chats/', token: getToken() });
+  for (const blob of result.blobs) {
+    if (!blob.pathname.endsWith('/config.json')) continue;
+    try {
+      const headResult = await head(blob.pathname, { token: getToken() });
+      if (!headResult) continue;
+      const response = await fetch(headResult.url, {
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+      });
+      if (!response.ok) continue;
+      const config = await response.json() as BotConfig;
+      if (config.inviteToken === inviteToken) {
+        return { botId: config.botId, config };
+      }
+    } catch {
+      // ignore
+    }
+  }
+  
+  return null;
+}
+
+export async function getChatMessages(botId: number, participantChatId: number): Promise<ChatMessages> {
+  try {
+    const result = await head(`${getChatKey(botId, participantChatId)}/messages.json`, { token: getToken() });
+    if (!result) return { messages: [] };
+    const response = await fetch(result.url, {
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+    });
+    if (!response.ok) return { messages: [] };
+    return await response.json() as ChatMessages;
+  } catch {
+    return { messages: [] };
+  }
+}
+
+export async function saveChatMessages(botId: number, participantChatId: number, messages: ChatMessages): Promise<void> {
+  await put(`${getChatKey(botId, participantChatId)}/messages.json`, JSON.stringify(messages), {
+    contentType: 'application/json',
+    access: 'private',
+    addRandomSuffix: false,
+    token: getToken(),
+  });
+}
+
+export async function addMessageToChat(
+  botId: number,
+  participantChatId: number,
+  message: Message,
+  messageLimit: number
+): Promise<void> {
+  const chat = await getChatMessages(botId, participantChatId);
+  chat.messages.push(message);
+  
+  if (chat.messages.length > messageLimit) {
+    chat.messages = chat.messages.slice(-messageLimit);
+  }
+  
+  await saveChatMessages(botId, participantChatId, chat);
+}
+
+export async function deleteChatData(botId: number, participantChatId: number): Promise<void> {
+  try {
+    await del(`${getChatKey(botId, participantChatId)}/meta.json`, { token: getToken() });
+    await del(`${getChatKey(botId, participantChatId)}/messages.json`, { token: getToken() });
+  } catch {
+    // ignore
+  }
+}
+
+// List all chats for a bot
+export async function listBotChats(botId: number): Promise<ChatMeta[]> {
+  const result = await list({ prefix: `chats/${botId}_`, token: getToken() });
   const chats: ChatMeta[] = [];
   
   for (const blob of result.blobs) {
     if (!blob.pathname.endsWith('/meta.json')) continue;
-    const config = await fetchJson<ChatMeta>(blob.pathname);
-    if (config && botIds.has(config.botId)) {
-      chats.push(config);
+    try {
+      const headResult = await head(blob.pathname, { token: getToken() });
+      if (!headResult) continue;
+      const response = await fetch(headResult.url, {
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+      });
+      if (!response.ok) continue;
+      const meta = await response.json() as ChatMeta;
+      chats.push(meta);
+    } catch {
+      // ignore
     }
   }
   
-  return chats;
+  return chats.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }

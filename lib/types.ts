@@ -4,14 +4,17 @@ export interface BotConfig {
   botUsername: string;
   botName: string;
   ownerTelegramId: number;
+  inviteToken: string;
   createdAt: string;
 }
 
 export interface ChatMeta {
   botId: number;
-  inviteToken: string;
-  partnerName: string;
   participantChatId: number;
+  participantName: string;
+  participantFirstName?: string;
+  participantLastName?: string;
+  participantUsername?: string;
   messageLimit: number;
   createdAt: string;
   updatedAt: string;

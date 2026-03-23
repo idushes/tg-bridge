@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/lib/types';
 
 interface ChatClientProps {
-  chatToken: string;
+  inviteToken: string;
+  botId: number;
+  chatId: number;
   initialMessages: Message[];
   partnerName: string;
 }
 
-export default function ChatClient({ chatToken, initialMessages, partnerName }: ChatClientProps) {
+export default function ChatClient({ inviteToken, botId, chatId, initialMessages, partnerName }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -32,7 +34,7 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
 
   const pollMessages = async () => {
     try {
-      const response = await fetch(`/api/chats/${chatToken}/messages`);
+      const response = await fetch(`/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
@@ -45,7 +47,7 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
   useEffect(() => {
     const interval = setInterval(pollMessages, 3000);
     return () => clearInterval(interval);
-  }, [chatToken]);
+  }, [inviteToken, botId, chatId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,7 +58,7 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
 
     setSending(true);
     try {
-      const response = await fetch(`/api/chats/${chatToken}/send`, {
+      const response = await fetch(`/api/chats/${chatId}/send?inviteToken=${inviteToken}&botId=${botId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newMessage }),
@@ -65,9 +67,13 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
       if (response.ok) {
         setNewMessage('');
         await pollMessages();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Ошибка отправки');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      alert('Ошибка сети');
     } finally {
       setSending(false);
     }
@@ -81,15 +87,20 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
   };
 
   const getMediaUrl = (message: Message) => {
-    if (!message.mediaFileId || !message.botId) return null;
-    return `/api/media/${message.id}?chat=${chatToken}`;
+    if (!message.mediaFileId) return null;
+    return `/api/media/${message.id}?inviteToken=${inviteToken}&botId=${botId}&chatId=${chatId}`;
   };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col">
       <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{partnerName}</h1>
+          <div className="flex items-center gap-3">
+            <a href={`/chat/${inviteToken}`} className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+              ←
+            </a>
+            <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{partnerName}</h1>
+          </div>
           <button
             onClick={() => {
               const newMode = !darkMode;
@@ -108,11 +119,11 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.from === 'operator' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  message.from === 'operator'
+                  message.from === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white'
                 }`}
@@ -156,7 +167,7 @@ export default function ChatClient({ chatToken, initialMessages, partnerName }: 
                 )}
                 
                 <p className={`text-xs mt-1 ${
-                  message.from === 'operator' ? 'text-blue-200' : 'text-zinc-400'
+                  message.from === 'user' ? 'text-blue-200' : 'text-zinc-400'
                 }`}>
                   {new Date(message.timestamp).toLocaleTimeString('ru-RU', {
                     hour: '2-digit',

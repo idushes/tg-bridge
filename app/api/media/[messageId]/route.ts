@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChatMeta, getChatMessages, getBotConfig } from '@/lib/blob';
+import { getChatByInviteToken, getChatMessages, getBotConfig } from '@/lib/blob';
 import { downloadFile } from '@/lib/telegram';
 
 export async function GET(
@@ -8,31 +8,33 @@ export async function GET(
 ) {
   const { messageId } = await params;
   const url = new URL(request.url);
-  const inviteToken = url.searchParams.get('chat');
+  const inviteToken = url.searchParams.get('inviteToken');
+  const botId = url.searchParams.get('botId');
+  const participantChatId = url.searchParams.get('chatId');
 
-  if (!inviteToken) {
-    return NextResponse.json({ error: 'Missing chat parameter' }, { status: 400 });
+  if (!inviteToken || !botId || !participantChatId) {
+    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
   }
 
-  const meta = await getChatMeta(inviteToken);
-  if (!meta) {
-    return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+  const chatData = await getChatByInviteToken(inviteToken);
+  if (!chatData) {
+    return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
   }
 
-  const messages = await getChatMessages(inviteToken);
+  const messages = await getChatMessages(parseInt(botId), parseInt(participantChatId));
   const message = messages.messages.find(m => m.id === messageId);
 
-  if (!message || !message.mediaFileId || !message.botId) {
+  if (!message || !message.mediaFileId) {
     return NextResponse.json({ error: 'Media not found' }, { status: 404 });
   }
 
-  const botConfig = await getBotConfig(message.botId);
+  const botConfig = await getBotConfig(chatData.botId);
   if (!botConfig) {
     return NextResponse.json({ error: 'Bot not found' }, { status: 404 });
   }
 
-  const filePath = await downloadFile(botConfig.botToken, message.mediaFileId);
-  if (!filePath) {
+  const fileData = await downloadFile(botConfig.botToken, message.mediaFileId);
+  if (!fileData) {
     return NextResponse.json({ error: 'Failed to download file' }, { status: 500 });
   }
 
@@ -43,7 +45,7 @@ export async function GET(
     document: 'application/octet-stream',
   };
 
-  return new Response(filePath as unknown as BodyInit, {
+  return new Response(fileData as unknown as BodyInit, {
     headers: {
       'Content-Type': contentTypeMap[message.mediaType!] || 'application/octet-stream',
       'Cache-Control': 'public, max-age=3600',
