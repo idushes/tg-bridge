@@ -17,6 +17,20 @@ export default function AdminClient() {
   const [parentName, setParentName] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored !== null) {
+      setDarkMode(stored === 'true');
+    } else {
+      setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
     checkAuth();
@@ -171,20 +185,31 @@ export default function AdminClient() {
     alert('Ссылка скопирована!');
   };
 
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem('darkMode', String(newMode));
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <p className="text-zinc-600">Загрузка...</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+        <p className="text-zinc-600 dark:text-zinc-400">Загрузка...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="bg-white p-8 rounded-xl shadow-sm max-w-md w-full text-center">
-          <h1 className="text-2xl font-bold text-zinc-900 mb-4">Вход</h1>
-          <p className="text-zinc-600 mb-6">Войдите через Telegram для управления ботами</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+        <div className="bg-white dark:bg-zinc-800 p-8 rounded-xl shadow-sm max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
           
           <script async src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || 'your_bot_username'} data-request-access="write" data-auth-url={typeof window !== 'undefined' ? window.location.href : ''}></script>
           
@@ -195,39 +220,49 @@ export default function AdminClient() {
             Войти через Telegram
           </button>
           
-          <Link href="/" className="block mt-4 text-sm text-zinc-500 hover:text-zinc-700">
-            ← На главную
-          </Link>
+          <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+            <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
+              ← На главную
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="bg-white border-b border-zinc-200 px-4 py-4">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+      <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-zinc-900">Панель управления</h1>
-            <p className="text-sm text-zinc-500">Привет, {user.name}!</p>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Панель управления</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Привет, {user.name}!</p>
           </div>
-          <button
-            onClick={() => {
-              localStorage.removeItem('telegram_id');
-              localStorage.removeItem('telegram_name');
-              setUser(null);
-              setBots([]);
-            }}
-            className="text-sm text-zinc-500 hover:text-zinc-700"
-          >
-            Выйти
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem('telegram_id');
+                localStorage.removeItem('telegram_name');
+                setUser(null);
+                setBots([]);
+              }}
+              className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+            >
+              Выйти
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-zinc-900">Ваши боты</h2>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Ваши боты</h2>
           <button
             onClick={() => setShowAddBot(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -237,18 +272,18 @@ export default function AdminClient() {
         </div>
 
         {showAddBot && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h3 className="font-semibold text-zinc-900 mb-4">Добавить нового бота</h3>
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6">
+            <h3 className="font-semibold text-zinc-900 dark:text-white mb-4">Добавить нового бота</h3>
             
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4 text-sm">
                 {error}
               </div>
             )}
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   Токен бота
                 </label>
                 <input
@@ -256,12 +291,12 @@ export default function AdminClient() {
                   value={botToken}
                   onChange={(e) => setBotToken(e.target.value)}
                   placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
-                  className="w-full px-4 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   Имя родителя
                 </label>
                 <input
@@ -269,7 +304,7 @@ export default function AdminClient() {
                   value={parentName}
                   onChange={(e) => setParentName(e.target.value)}
                   placeholder="Мама, Папа, Бабушка..."
-                  className="w-full px-4 py-2 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               
@@ -288,7 +323,7 @@ export default function AdminClient() {
                     setBotToken('');
                     setParentName('');
                   }}
-                  className="px-4 py-2 border border-zinc-200 text-zinc-700 rounded-lg font-medium hover:bg-zinc-50 transition-colors"
+                  className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
                 >
                   Отмена
                 </button>
@@ -298,11 +333,11 @@ export default function AdminClient() {
         )}
 
         {bots.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <p className="text-zinc-500 mb-4">У вас пока нет ботов</p>
+          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center">
+            <p className="text-zinc-500 dark:text-zinc-400 mb-4">У вас пока нет ботов</p>
             <button
               onClick={() => setShowAddBot(true)}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             >
               Добавить первого бота →
             </button>
@@ -310,11 +345,11 @@ export default function AdminClient() {
         ) : (
           <div className="space-y-6">
             {bots.map((bot) => (
-              <div key={bot.botId} className="bg-white rounded-xl shadow-sm p-6">
+              <div key={bot.botId} className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-semibold text-zinc-900">{bot.botName}</h3>
-                    <p className="text-sm text-zinc-500">@{bot.botUsername}</p>
+                    <h3 className="font-semibold text-zinc-900 dark:text-white">{bot.botName}</h3>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">@{bot.botUsername}</p>
                   </div>
                   <button
                     onClick={() => deleteBot(bot.botId)}
@@ -325,31 +360,31 @@ export default function AdminClient() {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-zinc-700">Чаты:</h4>
+                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Чаты:</h4>
                   {bot.chats.length === 0 ? (
                     <p className="text-sm text-zinc-400">Нет чатов</p>
                   ) : (
                     bot.chats.map((chat) => (
                       <div
                         key={chat.inviteToken}
-                        className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
                       >
                         <div>
-                          <p className="font-medium text-zinc-900">{chat.parentName}</p>
-                          <p className="text-xs text-zinc-500">
+                          <p className="font-medium text-zinc-900 dark:text-white">{chat.parentName}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
                             Лимит: {chat.messageLimit} сообщений
                           </p>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => copyLink(chat.inviteToken ? `${window.location.origin}/chat/${chat.inviteToken}` : '')}
-                            className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                            className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                           >
                             Копировать ссылку
                           </button>
                           <button
                             onClick={() => regenerateLink(chat.inviteToken)}
-                            className="px-3 py-1 text-sm bg-zinc-100 text-zinc-600 rounded-lg hover:bg-zinc-200 transition-colors"
+                            className="px-3 py-1 text-sm bg-zinc-100 dark:bg-zinc-600 text-zinc-600 dark:text-zinc-300 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-500 transition-colors"
                           >
                             Новую ссылку
                           </button>
@@ -369,7 +404,7 @@ export default function AdminClient() {
           </div>
         )}
 
-        <Link href="/" className="block mt-6 text-sm text-zinc-500 hover:text-zinc-700 text-center">
+        <Link href="/" className="block mt-6 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 text-center">
           ← На главную
         </Link>
       </main>

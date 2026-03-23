@@ -13,8 +13,22 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored !== null) {
+      setDarkMode(stored === 'true');
+    } else {
+      setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
 
   const pollMessages = async () => {
     try {
@@ -72,10 +86,20 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col">
-      <header className="bg-white border-b border-zinc-200 px-4 py-3">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-lg font-semibold text-zinc-900">{parentName}</h1>
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col">
+      <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{parentName}</h1>
+          <button
+            onClick={() => {
+              const newMode = !darkMode;
+              setDarkMode(newMode);
+              localStorage.setItem('darkMode', String(newMode));
+            }}
+            className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors text-sm"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 
@@ -90,7 +114,7 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
                 className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                   message.from === 'operator'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-zinc-200 text-zinc-900'
+                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white'
                 }`}
               >
                 {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
@@ -146,7 +170,7 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
         </div>
       </main>
 
-      <footer className="bg-white border-t border-zinc-200 p-4">
+      <footer className="bg-white dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 p-4">
         <div className="max-w-2xl mx-auto flex gap-2">
           <textarea
             ref={inputRef}
@@ -154,7 +178,7 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Введите сообщение..."
-            className="flex-1 resize-none rounded-xl border border-zinc-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 resize-none rounded-xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-4 py-2 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={1}
             disabled={sending}
           />
