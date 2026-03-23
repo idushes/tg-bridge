@@ -1,10 +1,12 @@
-import { put, del, list, getDownloadUrl } from '@vercel/blob';
+import { put, del, list, head } from '@vercel/blob';
 import type { BotConfig, ChatMeta, ChatMessages, Message } from './types';
 
 async function fetchJson<T>(pathname: string): Promise<T | null> {
   try {
-    const url = getDownloadUrl(pathname);
-    const response = await fetch(url);
+    const result = await head(pathname);
+    if (!result) return null;
+
+    const response = await fetch(result.url);
     if (!response.ok) return null;
     return await response.json() as T;
   } catch {
@@ -15,7 +17,7 @@ async function fetchJson<T>(pathname: string): Promise<T | null> {
 export async function saveBotConfig(botId: number, config: BotConfig): Promise<void> {
   await put(`bots/${botId}/config.json`, JSON.stringify(config), {
     contentType: 'application/json',
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
   });
 }
@@ -35,7 +37,7 @@ export async function deleteBotConfig(botId: number): Promise<void> {
 export async function saveChatMeta(inviteToken: string, meta: ChatMeta): Promise<void> {
   await put(`chats/${inviteToken}/meta.json`, JSON.stringify(meta), {
     contentType: 'application/json',
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
   });
 }
@@ -60,7 +62,7 @@ export async function getChatMessages(inviteToken: string): Promise<ChatMessages
 export async function saveChatMessages(inviteToken: string, messages: ChatMessages): Promise<void> {
   await put(`chats/${inviteToken}/messages.json`, JSON.stringify(messages), {
     contentType: 'application/json',
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
   });
 }
