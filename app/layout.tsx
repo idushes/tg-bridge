@@ -29,11 +29,15 @@ export default function RootLayout({
     >
       <head>
         <script
-          async
-          src="https://telegram.org/js/telegram-widget.js?21"
-          data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID || "your_bot"}
-          data-request-access="write"
-          data-auth-url={process.env.NEXT_PUBLIC_AUTH_CALLBACK_URL || ""}
+          dangerouslySetInnerHTML={{
+            __html: `
+              function onTelegramAuth(user) {
+                localStorage.setItem('telegram_id', user.id);
+                localStorage.setItem('telegram_name', user.first_name || user.username || 'Пользователь');
+                window.location.reload();
+              }
+            `,
+          }}
         />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>

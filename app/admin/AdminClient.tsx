@@ -219,12 +219,16 @@ export default function AdminClient() {
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
           
-          <button
-            onClick={handleTelegramLogin}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Войти через Telegram
-          </button>
+          <div className="flex justify-center">
+            <script
+              async
+              src="https://telegram.org/js/telegram-widget.js?21"
+              data-telegram-login={process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID}
+              data-size="large"
+              data-request-access="write"
+              data-onauth="onTelegramAuth(user)"
+            />
+          </div>
           
           <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
             <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
