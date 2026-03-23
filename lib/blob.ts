@@ -9,6 +9,19 @@ function getToken(): string {
   return token;
 }
 
+async function fetchBlobJson<T>(url: string): Promise<T | null> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return await response.json() as T;
+}
+
 // Bot configuration
 export async function saveBotConfig(botId: number, config: BotConfig): Promise<void> {
   await put(`bots/${botId}/config.json`, JSON.stringify(config), {
@@ -23,11 +36,7 @@ export async function getBotConfig(botId: number): Promise<BotConfig | null> {
   try {
     const result = await head(`bots/${botId}/config.json`, { token: getToken() });
     if (!result) return null;
-    const response = await fetch(result.url, {
-      headers: { 'Authorization': `Bearer ${getToken()}` },
-    });
-    if (!response.ok) return null;
-    return await response.json() as BotConfig;
+    return await fetchBlobJson<BotConfig>(result.url);
   } catch {
     return null;
   }
@@ -50,11 +59,8 @@ export async function listUserBots(ownerTelegramId: number): Promise<BotConfig[]
     try {
       const headResult = await head(blob.pathname, { token: getToken() });
       if (!headResult) continue;
-      const response = await fetch(headResult.url, {
-        headers: { 'Authorization': `Bearer ${getToken()}` },
-      });
-      if (!response.ok) continue;
-      const config = await response.json() as BotConfig;
+      const config = await fetchBlobJson<BotConfig>(headResult.url);
+      if (!config) continue;
       if (config.ownerTelegramId === ownerTelegramId) {
         bots.push(config);
       }
@@ -84,11 +90,7 @@ export async function getChatMeta(botId: number, participantChatId: number): Pro
   try {
     const result = await head(`${getChatKey(botId, participantChatId)}/meta.json`, { token: getToken() });
     if (!result) return null;
-    const response = await fetch(result.url, {
-      headers: { 'Authorization': `Bearer ${getToken()}` },
-    });
-    if (!response.ok) return null;
-    return await response.json() as ChatMeta;
+    return await fetchBlobJson<ChatMeta>(result.url);
   } catch {
     return null;
   }
@@ -103,11 +105,8 @@ export async function getChatByInviteToken(inviteToken: string): Promise<{ botId
     try {
       const headResult = await head(blob.pathname, { token: getToken() });
       if (!headResult) continue;
-      const response = await fetch(headResult.url, {
-        headers: { 'Authorization': `Bearer ${getToken()}` },
-      });
-      if (!response.ok) continue;
-      const config = await response.json() as BotConfig;
+      const config = await fetchBlobJson<BotConfig>(headResult.url);
+      if (!config) continue;
       if (config.inviteToken === inviteToken) {
         return { botId: config.botId, config };
       }
@@ -123,11 +122,7 @@ export async function getChatMessages(botId: number, participantChatId: number):
   try {
     const result = await head(`${getChatKey(botId, participantChatId)}/messages.json`, { token: getToken() });
     if (!result) return { messages: [] };
-    const response = await fetch(result.url, {
-      headers: { 'Authorization': `Bearer ${getToken()}` },
-    });
-    if (!response.ok) return { messages: [] };
-    return await response.json() as ChatMessages;
+    return await fetchBlobJson<ChatMessages>(result.url) ?? { messages: [] };
   } catch {
     return { messages: [] };
   }
@@ -177,11 +172,8 @@ export async function listBotChats(botId: number): Promise<ChatMeta[]> {
     try {
       const headResult = await head(blob.pathname, { token: getToken() });
       if (!headResult) continue;
-      const response = await fetch(headResult.url, {
-        headers: { 'Authorization': `Bearer ${getToken()}` },
-      });
-      if (!response.ok) continue;
-      const meta = await response.json() as ChatMeta;
+      const meta = await fetchBlobJson<ChatMeta>(headResult.url);
+      if (!meta) continue;
       chats.push(meta);
     } catch {
       // ignore

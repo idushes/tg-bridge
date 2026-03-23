@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBotConfig, listBotChats, getChatMeta, saveChatMeta, addMessageToChat } from '@/lib/blob';
+import { getBotConfig, getChatMeta, saveChatMeta, addMessageToChat } from '@/lib/blob';
 import { extractMessageFromUpdate } from '@/lib/telegram';
 import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,10 +28,7 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
-    // Check if chat exists for this participant
-    let existingChat: ChatMeta | null = null;
-    const chats = await listBotChats(botIdNum);
-    existingChat = chats.find((c: ChatMeta) => c.participantChatId === messageData.chatId) ?? null;
+    let existingChat = await getChatMeta(botIdNum, messageData.chatId);
 
     // Create new chat if doesn't exist
     if (!existingChat) {
@@ -83,7 +80,10 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('Webhook error:', {
+      botId: botIdNum,
+      error,
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

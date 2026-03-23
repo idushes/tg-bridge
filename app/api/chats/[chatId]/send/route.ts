@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getChatByInviteToken, addMessageToChat } from '@/lib/blob';
+import { getChatByInviteToken, getChatMeta, addMessageToChat } from '@/lib/blob';
 import { sendMessageToChat } from '@/lib/telegram';
 import type { Message } from '@/lib/types';
 
@@ -49,8 +49,10 @@ export async function POST(
       timestamp: new Date().toISOString(),
     };
 
-    const DEFAULT_MESSAGE_LIMIT = parseInt(process.env.DEFAULT_MESSAGE_LIMIT || '100');
-    await addMessageToChat(chatData.botId, participantChatId, message, DEFAULT_MESSAGE_LIMIT);
+    const chatMeta = await getChatMeta(chatData.botId, participantChatId);
+    const messageLimit = chatMeta?.messageLimit ?? parseInt(process.env.DEFAULT_MESSAGE_LIMIT || '100');
+
+    await addMessageToChat(chatData.botId, participantChatId, message, messageLimit);
 
     return NextResponse.json({ success: true });
   } catch (error) {
