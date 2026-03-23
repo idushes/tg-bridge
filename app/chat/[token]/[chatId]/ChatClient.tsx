@@ -17,6 +17,9 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const [sending, setSending] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
+  const previousMessageCountRef = useRef(initialMessages.length);
+  const viewportRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,8 +67,31 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   }, [inviteToken, botId, chatId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const hasNewMessages = messages.length > previousMessageCountRef.current;
+
+    if (hasNewMessages && shouldStickToBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: previousMessageCountRef.current === 0 ? 'auto' : 'smooth' });
+    }
+
+    previousMessageCountRef.current = messages.length;
   }, [messages]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const updateStickiness = () => {
+      const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      setShouldStickToBottom(distanceFromBottom < 120);
+    };
+
+    updateStickiness();
+    viewport.addEventListener('scroll', updateStickiness, { passive: true });
+
+    return () => viewport.removeEventListener('scroll', updateStickiness);
+  }, []);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return;
@@ -138,7 +164,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4">
+      <main ref={viewportRef} className="flex-1 overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           {messages.map((message) => (
             <div
