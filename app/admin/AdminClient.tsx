@@ -1,18 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Script from 'next/script';
-import type { BotConfig, ChatMeta } from '@/lib/types';
+import type { BotConfig } from '@/lib/types';
 import Link from 'next/link';
-
-interface BotWithChats extends BotConfig {
-  chats: ChatMeta[];
-}
 
 export default function AdminClient() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: number; name: string } | null>(null);
-  const [bots, setBots] = useState<BotWithChats[]>([]);
+  const [bots, setBots] = useState<BotConfig[]>([]);
   const [showAddBot, setShowAddBot] = useState(false);
   const [botToken, setBotToken] = useState('');
   const [adding, setAdding] = useState(false);
@@ -58,20 +53,7 @@ export default function AdminClient() {
       
       if (response.ok) {
         const data = await response.json();
-        
-        const botsWithChats: BotWithChats[] = [];
-        for (const bot of data.bots) {
-          const chatsResponse = await fetch(`/api/chats?botId=${bot.botId}`, {
-            headers: { 'x-telegram-id': tgId.toString() },
-          });
-          
-          if (chatsResponse.ok) {
-            const chatsData = await chatsResponse.json();
-            botsWithChats.push({ ...bot, chats: chatsData.chats });
-          }
-        }
-        
-        setBots(botsWithChats);
+        setBots(data.bots);
       }
     } catch (error) {
       console.error('Error fetching bots:', error);
@@ -138,7 +120,9 @@ export default function AdminClient() {
 
       setBotToken('');
       setShowAddBot(false);
-      await fetchBots(parseInt(tgId!));
+      if (tgId) {
+        await fetchBots(parseInt(tgId));
+      }
     } catch (err) {
       setError('Ошибка сети');
     } finally {
@@ -197,7 +181,7 @@ export default function AdminClient() {
           </div>
           
           <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
-            <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
+            <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer">
               ← На главную
             </Link>
           </div>
@@ -217,7 +201,7 @@ export default function AdminClient() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors"
+              className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 cursor-pointer transition-colors"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
@@ -228,7 +212,7 @@ export default function AdminClient() {
                 setUser(null);
                 setBots([]);
               }}
-              className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
+              className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer"
             >
               Выйти
             </button>
@@ -241,7 +225,7 @@ export default function AdminClient() {
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Ваши боты</h2>
           <button
             onClick={() => setShowAddBot(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 cursor-pointer transition-colors"
           >
             + Добавить бота
           </button>
@@ -275,7 +259,7 @@ export default function AdminClient() {
                 <button
                   onClick={addBot}
                   disabled={adding}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 cursor-pointer transition-colors"
                 >
                   {adding ? 'Добавление...' : 'Добавить'}
                 </button>
@@ -285,7 +269,7 @@ export default function AdminClient() {
                     setError('');
                     setBotToken('');
                   }}
-                  className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                  className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer transition-colors"
                 >
                   Отмена
                 </button>
@@ -299,7 +283,7 @@ export default function AdminClient() {
             <p className="text-zinc-500 dark:text-zinc-400 mb-4">У вас пока нет ботов</p>
             <button
               onClick={() => setShowAddBot(true)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium cursor-pointer"
             >
               Добавить первого бота →
             </button>
@@ -315,7 +299,7 @@ export default function AdminClient() {
                   </div>
                   <button
                     onClick={() => deleteBot(bot.botId)}
-                    className="text-red-500 hover:text-red-600 text-sm"
+                    className="text-red-500 hover:text-red-600 text-sm cursor-pointer"
                   >
                     Удалить бота
                   </button>
@@ -329,48 +313,18 @@ export default function AdminClient() {
                     </code>
                     <button
                       onClick={() => copyLink(bot.inviteToken)}
-                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 cursor-pointer transition-colors"
                     >
                       Копировать
                     </button>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Чаты ({bot.chats.length}):
-                  </h4>
-                  {bot.chats.length === 0 ? (
-                    <p className="text-sm text-zinc-400">
-                      Пока никто не писал боту. Отправьте /start боту в Telegram
-                    </p>
-                  ) : (
-                    bot.chats.map((chat) => (
-                      <div
-                        key={chat.participantChatId}
-                        className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
-                      >
-                        <div>
-                          <p className="font-medium text-zinc-900 dark:text-white">
-                            {chat.participantFirstName || chat.participantUsername || `Чат ${chat.participantChatId}`}
-                          </p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {chat.participantUsername && `@${chat.participantUsername}`}
-                          </p>
-                        </div>
-                        <div className="text-xs text-zinc-400">
-                          {new Date(chat.updatedAt).toLocaleDateString('ru-RU')}
-                        </div>
-                      </div>
-                    ))
-                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <Link href="/" className="block mt-6 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 text-center">
+        <Link href="/" className="block mt-6 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 text-center cursor-pointer">
           ← На главную
         </Link>
       </main>
