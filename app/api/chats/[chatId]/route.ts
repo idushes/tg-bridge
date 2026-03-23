@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 import { getChatMeta, saveChatMeta, getBotConfig, deleteChatData } from '@/lib/blob';
 import type { ChatMeta } from '@/lib/types';
 
@@ -17,7 +16,7 @@ export async function GET(
   return NextResponse.json({ 
     chat: {
       inviteToken: meta.inviteToken,
-      parentName: meta.parentName,
+      partnerName: meta.partnerName,
       messageLimit: meta.messageLimit,
       createdAt: meta.createdAt,
     }
@@ -47,13 +46,14 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { parentName, messageLimit, regenerateLink } = body;
+    const { partnerName, messageLimit, regenerateLink } = body;
 
     if (regenerateLink) {
+      const { v4: uuidv4 } = await import('uuid');
       const newToken = uuidv4();
       await deleteChatData(chatId);
       
-      const newMeta = {
+      const newMeta: ChatMeta = {
         ...meta,
         inviteToken: newToken,
         createdAt: new Date().toISOString(),
@@ -71,7 +71,7 @@ export async function PATCH(
 
     const updatedMeta: ChatMeta = {
       ...meta,
-      ...(parentName && { parentName }),
+      ...(partnerName && { partnerName }),
       ...(messageLimit && { messageLimit }),
       updatedAt: new Date().toISOString(),
     };

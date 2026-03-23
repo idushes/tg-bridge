@@ -36,7 +36,7 @@ export default function AdminClient() {
   const [bots, setBots] = useState<BotWithChats[]>([]);
   const [showAddBot, setShowAddBot] = useState(false);
   const [botToken, setBotToken] = useState('');
-  const [parentName, setParentName] = useState('');
+  const [partnerName, setPartnerName] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [darkMode, setDarkMode] = useState(false);
@@ -133,7 +133,7 @@ export default function AdminClient() {
   };
 
   const addBot = async () => {
-    if (!botToken || !parentName) {
+    if (!botToken || !partnerName) {
       setError('Заполните все поля');
       return;
     }
@@ -149,7 +149,7 @@ export default function AdminClient() {
           'Content-Type': 'application/json',
           'x-telegram-id': tgId || '',
         },
-        body: JSON.stringify({ botToken, parentName }),
+        body: JSON.stringify({ botToken, partnerName }),
       });
 
       const data = await response.json();
@@ -160,7 +160,7 @@ export default function AdminClient() {
       }
 
       setBotToken('');
-      setParentName('');
+      setPartnerName('');
       setShowAddBot(false);
       await fetchBots(parseInt(tgId!));
     } catch (err) {
@@ -327,8 +327,8 @@ export default function AdminClient() {
                 </label>
                 <input
                   type="text"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
+                  value={partnerName}
+                  onChange={(e) => setPartnerName(e.target.value)}
                   placeholder="Мама, Папа, Бабушка..."
                   className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -347,7 +347,7 @@ export default function AdminClient() {
                     setShowAddBot(false);
                     setError('');
                     setBotToken('');
-                    setParentName('');
+      setPartnerName('');
                   }}
                   className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
                 >
@@ -396,7 +396,7 @@ export default function AdminClient() {
                         className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
                       >
                         <div>
-                          <p className="font-medium text-zinc-900 dark:text-white">{chat.parentName}</p>
+                          <p className="font-medium text-zinc-900 dark:text-white">{chat.partnerName}</p>
                           <p className="text-xs text-zinc-500 dark:text-zinc-400">
                             Лимит: {chat.messageLimit} сообщений
                           </p>

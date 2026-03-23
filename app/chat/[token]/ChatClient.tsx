@@ -6,10 +6,10 @@ import type { Message } from '@/lib/types';
 interface ChatClientProps {
   chatToken: string;
   initialMessages: Message[];
-  parentName: string;
+  partnerName: string;
 }
 
-export default function ChatClient({ chatToken, initialMessages, parentName }: ChatClientProps) {
+export default function ChatClient({ chatToken, initialMessages, partnerName }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -89,7 +89,7 @@ export default function ChatClient({ chatToken, initialMessages, parentName }: C
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col">
       <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{parentName}</h1>
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{partnerName}</h1>
           <button
             onClick={() => {
               const newMode = !darkMode;

@@ -18,5 +18,5 @@ export default async function ChatPage({ params }: { params: Promise<{ token: st
 
   const messages = await getChatMessages(token);
 
-  return <ChatClient chatToken={token} initialMessages={messages.messages} parentName={meta.parentName} />;
+  return <ChatClient chatToken={token} initialMessages={messages.messages} partnerName={meta.partnerName} />;
 }

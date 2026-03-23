@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getBotConfig, saveChatMeta, listUserChats, getChatMeta, deleteChatData } from '@/lib/blob';
+import { getBotConfig, saveChatMeta, listUserChats } from '@/lib/blob';
 import type { ChatMeta } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { botId, parentName } = body;
+    const { botId, partnerName } = body;
 
-    if (!botId || !parentName) {
-      return NextResponse.json({ error: 'Missing botId or parentName' }, { status: 400 });
+    if (!botId || !partnerName) {
+      return NextResponse.json({ error: 'Missing botId or partnerName' }, { status: 400 });
     }
 
     const botConfig = await getBotConfig(parseInt(botId));
@@ -36,16 +36,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const existingChats = await listUserChats(parseInt(telegramId));
-    const botChats = existingChats.filter(c => c.botId === parseInt(botId));
-    
     const inviteToken = uuidv4();
     const meta: ChatMeta = {
       botId: parseInt(botId),
       inviteToken,
-      parentName,
-      parentTelegramId: 0,
-      messageLimit: botChats[0]?.messageLimit || 100,
+      partnerName,
+      participantChatId: 0,
+      messageLimit: 100,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

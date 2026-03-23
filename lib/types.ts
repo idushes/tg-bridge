@@ -10,8 +10,8 @@ export interface BotConfig {
 export interface ChatMeta {
   botId: number;
   inviteToken: string;
-  parentName: string;
-  parentTelegramId: number;
+  partnerName: string;
+  participantChatId: number;
   messageLimit: number;
   createdAt: string;
   updatedAt: string;

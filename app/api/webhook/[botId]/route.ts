@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBotConfig, listUserChats, saveChatMeta } from '@/lib/blob';
+import { extractMessageFromUpdate } from '@/lib/telegram';
+import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
-import { getBotConfig, getChatMeta, addMessageToChat, listUserChats } from '@/lib/blob';
-import { extractMessageFromUpdate, sendMessageToChat } from '@/lib/telegram';
-import type { Message, TelegramUpdate } from '@/lib/types';
 
 export async function POST(
   request: NextRequest,
@@ -28,8 +28,9 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
+    // Find chat for this bot
     const chats = await listUserChats(botConfig.ownerTelegramId);
-    const chat = chats.find(c => c.botId === botIdNum);
+    const chat = chats.find(c => c.botId === botIdNum) ?? null;
 
     if (!chat) {
       return NextResponse.json({ error: 'Chat not configured' }, { status: 404 });
@@ -38,21 +39,21 @@ export async function POST(
     const message: Message = {
       id: uuidv4(),
       text: messageData.text,
-      from: 'user',
+      from: 'operator', // Message from Telegram user (son/participant)
       timestamp: new Date().toISOString(),
       mediaType: messageData.mediaType,
       mediaFileId: messageData.mediaFileId,
       botId: botIdNum,
     };
 
+    const { addMessageToChat } = await import('@/lib/blob');
     await addMessageToChat(chat.inviteToken, message, chat.messageLimit);
 
-    const isFirstMessage = chat.parentTelegramId === 0;
-    if (isFirstMessage) {
-      const { saveChatMeta } = await import('@/lib/blob');
-      const updatedMeta = {
+    // Update participantChatId if first message
+    if (chat.participantChatId === 0) {
+      const updatedMeta: ChatMeta = {
         ...chat,
-        parentTelegramId: messageData.chatId,
+        participantChatId: messageData.chatId,
         updatedAt: new Date().toISOString(),
       };
       await saveChatMeta(chat.inviteToken, updatedMeta);

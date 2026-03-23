@@ -5,9 +5,7 @@ import {
   saveBotConfig, 
   getBotConfig, 
   listUserBots, 
-  deleteBotConfig, 
-  deleteChatData,
-  listUserChats 
+  saveChatMeta
 } from '@/lib/blob';
 import type { BotConfig, ChatMeta } from '@/lib/types';
 
@@ -31,10 +29,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { botToken, parentName } = body;
+    const { botToken, partnerName } = body;
 
-    if (!botToken || !parentName) {
-      return NextResponse.json({ error: 'Missing botToken or parentName' }, { status: 400 });
+    if (!botToken || !partnerName) {
+      return NextResponse.json({ error: 'Missing botToken or partnerName' }, { status: 400 });
     }
 
     const botInfo = await getBotInfo(botToken);
@@ -68,14 +66,13 @@ export async function POST(request: NextRequest) {
     const meta: ChatMeta = {
       botId: botInfo.id,
       inviteToken,
-      parentName,
-      parentTelegramId: 0,
+      partnerName,
+      participantChatId: 0,
       messageLimit: DEFAULT_MESSAGE_LIMIT,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    const { saveChatMeta } = await import('@/lib/blob');
     await saveChatMeta(inviteToken, meta);
 
     return NextResponse.json({ 
