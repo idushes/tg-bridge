@@ -80,10 +80,21 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    const debug = new URL(request.url).searchParams.get('debug') === '1';
+
     console.error('Webhook error:', {
       botId: botIdNum,
       error,
     });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        ...(debug && {
+          details: error instanceof Error ? error.message : String(error),
+        }),
+      },
+      { status: 500 }
+    );
   }
 }
