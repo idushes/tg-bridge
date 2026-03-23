@@ -189,10 +189,12 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
 
           return {
             ...pending,
-            serverMessage: data.message,
+            serverMessage: {
+              ...data.message,
+              mediaUrl: pending.optimisticMessage.mediaUrl,
+            },
           };
         }));
-        revokePreviewUrl(optimisticMessage);
 
         void pollMessages();
       } else {
