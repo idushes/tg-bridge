@@ -69,6 +69,7 @@ export default function AdminClient() {
     
     setUser({ id: parseInt(tgId), name: tgName || 'Пользователь' });
     await fetchBots(parseInt(tgId));
+    setLoading(false);
   };
 
   const fetchBots = async (tgId: number) => {
