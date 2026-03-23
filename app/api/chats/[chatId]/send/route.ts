@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getChatByInviteToken, getChatMeta, addMessageToChat } from '@/lib/blob';
-import { sendMessageToChat } from '@/lib/telegram';
+import { sendMessageToChat, sendPhotoFile } from '@/lib/telegram';
 import type { Message } from '@/lib/types';
 
 export async function POST(
@@ -28,25 +28,47 @@ export async function POST(
   }
 
   try {
-    const body = await request.json();
-    const { text } = body;
+    const contentType = request.headers.get('content-type') || '';
+    const isMultipart = contentType.includes('multipart/form-data');
+    const body = isMultipart ? await request.formData() : await request.json();
+    const text = isMultipart
+      ? String(body.get('text') || '').trim()
+      : String(body.text || '').trim();
+    const photo = isMultipart ? body.get('photo') : null;
 
-    if (!text || !text.trim()) {
+    if (!text && !(photo instanceof File)) {
       return NextResponse.json({ error: 'Empty message' }, { status: 400 });
     }
 
-    // Send message to Telegram
-    const sent = await sendMessageToChat(chatData.config.botToken, participantChatId, text);
-    if (!sent) {
-      return NextResponse.json({ error: 'Failed to send message to Telegram' }, { status: 500 });
+    if (photo instanceof File && !photo.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only images are supported' }, { status: 400 });
     }
 
-    // Save message to chat
+    let mediaType: Message['mediaType'];
+    let mediaFileId: string | undefined;
+
+    if (photo instanceof File) {
+      const uploaded = await sendPhotoFile(chatData.config.botToken, participantChatId, photo, text || undefined);
+      if (!uploaded.ok) {
+        return NextResponse.json({ error: 'Failed to send photo to Telegram' }, { status: 500 });
+      }
+
+      mediaType = 'photo';
+      mediaFileId = uploaded.fileId;
+    } else {
+      const sent = await sendMessageToChat(chatData.config.botToken, participantChatId, text);
+      if (!sent) {
+        return NextResponse.json({ error: 'Failed to send message to Telegram' }, { status: 500 });
+      }
+    }
+
     const message: Message = {
       id: uuidv4(),
-      text: text.trim(),
-      from: 'user', // Message from parent (web user)
+      text,
+      from: 'user',
       timestamp: new Date().toISOString(),
+      mediaType,
+      mediaFileId,
     };
 
     const chatMeta = await getChatMeta(chatData.botId, participantChatId);
@@ -54,7 +76,7 @@ export async function POST(
 
     await addMessageToChat(chatData.botId, participantChatId, message, messageLimit);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message });
   } catch (error) {
     console.error('Error sending message:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

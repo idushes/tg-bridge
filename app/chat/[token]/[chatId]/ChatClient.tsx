@@ -1,7 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Message } from '@/lib/types';
+
+interface PendingMessage {
+  clientId: string;
+  optimisticMessage: Message;
+  serverMessage?: Message;
+}
 
 interface ChatClientProps {
   inviteToken: string;
@@ -13,6 +19,7 @@ interface ChatClientProps {
 
 export default function ChatClient({ inviteToken, botId, chatId, initialMessages, partnerName }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -21,12 +28,36 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const previousMessageCountRef = useRef(initialMessages.length);
   const viewportRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const formatTime = (timestamp: string) => new Date(timestamp).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const visibleMessages = useMemo(() => {
+    const merged = [...messages];
+
+    for (const pending of pendingMessages) {
+      merged.push(pending.serverMessage ?? pending.optimisticMessage);
+    }
+
+    const byId = new Map<string, Message>();
+    for (const message of merged) {
+      byId.set(message.id, message);
+    }
+
+    return Array.from(byId.values()).sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }, [messages, pendingMessages]);
+
+  const revokePreviewUrl = (message?: Message) => {
+    if (message?.mediaUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(message.mediaUrl);
+    }
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -54,6 +85,16 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
+        setPendingMessages((current) => {
+          const serverIds = new Set<string>(data.messages.map((message: Message) => message.id));
+          return current.filter((pending) => {
+            const resolved = !!pending.serverMessage && serverIds.has(pending.serverMessage.id);
+            if (resolved) {
+              revokePreviewUrl(pending.optimisticMessage);
+            }
+            return !resolved;
+          });
+        });
       }
     } catch (error) {
       console.error('Error polling messages:', error);
@@ -67,14 +108,14 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   }, [inviteToken, botId, chatId]);
 
   useEffect(() => {
-    const hasNewMessages = messages.length > previousMessageCountRef.current;
+    const hasNewMessages = visibleMessages.length > previousMessageCountRef.current;
 
     if (hasNewMessages && shouldStickToBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: previousMessageCountRef.current === 0 ? 'auto' : 'smooth' });
     }
 
-    previousMessageCountRef.current = messages.length;
-  }, [messages]);
+    previousMessageCountRef.current = visibleMessages.length;
+  }, [visibleMessages, shouldStickToBottom]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -93,40 +134,96 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
     return () => viewport.removeEventListener('scroll', updateStickiness);
   }, []);
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || sending) return;
-
+  const sendPayload = async (file?: File) => {
     const text = newMessage.trim();
+    if ((!text && !file) || sending) return;
+
+    const clientId = `local-${Date.now()}`;
+    const optimisticMessage: Message = {
+      id: clientId,
+      text,
+      from: 'user',
+      timestamp: new Date().toISOString(),
+      mediaType: file ? 'photo' : undefined,
+      mediaUrl: file ? URL.createObjectURL(file) : undefined,
+    };
+
+    setPendingMessages((current) => ([
+      ...current,
+      {
+        clientId,
+        optimisticMessage,
+      },
+    ]));
+    setShouldStickToBottom(true);
+    setNewMessage('');
     setSending(true);
+
     try {
-      const response = await fetch(`/api/chats/${chatId}/send?inviteToken=${inviteToken}&botId=${botId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
+      const response = await fetch(
+        `/api/chats/${chatId}/send?inviteToken=${inviteToken}&botId=${botId}`,
+        file
+          ? {
+              method: 'POST',
+              body: (() => {
+                const formData = new FormData();
+                formData.set('photo', file);
+                formData.set('text', text);
+                return formData;
+              })(),
+            }
+          : {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text }),
+            }
+      );
 
       if (response.ok) {
-        setMessages((current) => ([
-          ...current,
-          {
-            id: `local-${Date.now()}`,
-            text,
-            from: 'user',
-            timestamp: new Date().toISOString(),
-          },
-        ]));
-        setNewMessage('');
-        await pollMessages();
+        const data = await response.json();
+
+        setPendingMessages((current) => current.map((pending) => {
+          if (pending.clientId !== clientId) {
+            return pending;
+          }
+
+          return {
+            ...pending,
+            serverMessage: data.message,
+          };
+        }));
+        revokePreviewUrl(optimisticMessage);
+
+        void pollMessages();
       } else {
         const data = await response.json();
+        setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
+        revokePreviewUrl(optimisticMessage);
         alert(data.error || 'Ошибка отправки');
       }
     } catch (error) {
+      setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
+      revokePreviewUrl(optimisticMessage);
       console.error('Error sending message:', error);
       alert('Ошибка сети');
     } finally {
       setSending(false);
     }
+  };
+
+  const sendMessage = async () => {
+    await sendPayload();
+  };
+
+  const handlePhotoSelection = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    await sendPayload(file);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -137,13 +234,14 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   };
 
   const getMediaUrl = (message: Message) => {
+    if (message.mediaUrl) return message.mediaUrl;
     if (!message.mediaFileId) return null;
     return `/api/media/${message.id}?inviteToken=${inviteToken}&botId=${botId}&chatId=${chatId}`;
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex flex-col">
-      <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
+    <div className="h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex flex-col">
+      <header className="shrink-0 bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a href={`/chat/${inviteToken}`} className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
@@ -164,43 +262,43 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
         </div>
       </header>
 
-      <main ref={viewportRef} className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-2xl mx-auto space-y-4">
-          {messages.map((message) => (
+      <main ref={viewportRef} className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="max-w-2xl mx-auto space-y-3">
+          {visibleMessages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                className={`max-w-[65%] rounded-2xl px-3 py-2 ${
                   message.from === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white'
                 }`}
               >
-                {message.text && <p className="whitespace-pre-wrap">{message.text}</p>}
+                {message.text && <p className="whitespace-pre-wrap text-[15px] leading-5">{message.text}</p>}
                 
-                {message.mediaType && message.mediaFileId && (
-                  <div className="mt-2">
-                    {message.mediaType === 'photo' && (
+                {message.mediaType && getMediaUrl(message) && (
+                  <div className="mt-1.5">
+                    {message.mediaType === 'photo' && getMediaUrl(message) && (
                       <img
                         src={getMediaUrl(message) || ''}
                         alt="Photo"
-                        className="rounded-lg max-w-full"
+                        className="rounded-lg max-w-full max-h-80 object-cover"
                       />
                     )}
                     {message.mediaType === 'video' && (
                       <video
                         src={getMediaUrl(message) || ''}
                         controls
-                        className="rounded-lg max-w-full"
+                        className="rounded-lg max-w-full max-h-80"
                       />
                     )}
                     {message.mediaType === 'voice' && (
                       <audio
                         src={getMediaUrl(message) || ''}
                         controls
-                        className="w-full"
+                        className="w-full max-w-56"
                       />
                     )}
                     {message.mediaType === 'document' && (
@@ -218,7 +316,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
                 
                 <p
                   suppressHydrationWarning
-                  className={`text-xs mt-1 ${
+                  className={`text-[11px] mt-1 ${
                     message.from === 'user' ? 'text-blue-200' : 'text-zinc-400'
                   }`}
                 >
@@ -231,8 +329,23 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
         </div>
       </main>
 
-      <footer className="bg-white dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 p-4">
+      <footer className="shrink-0 bg-white dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 p-4">
         <div className="max-w-2xl mx-auto flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoSelection}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending}
+            className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+            aria-label="Отправить фото"
+          >
+            📷
+          </button>
           <textarea
             ref={inputRef}
             value={newMessage}

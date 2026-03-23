@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChatByInviteToken, getChatMessages, getBotConfig } from '@/lib/blob';
-import { downloadFile } from '@/lib/telegram';
+import { downloadFile, getFile } from '@/lib/telegram';
 
 export async function GET(
   request: NextRequest,
@@ -21,7 +21,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
   }
 
-  const messages = await getChatMessages(parseInt(botId), parseInt(participantChatId));
+  const messages = await getChatMessages(chatData.botId, parseInt(participantChatId));
   const message = messages.messages.find(m => m.id === messageId);
 
   if (!message || !message.mediaFileId) {
@@ -33,7 +33,12 @@ export async function GET(
     return NextResponse.json({ error: 'Bot not found' }, { status: 404 });
   }
 
-  const fileData = await downloadFile(botConfig.botToken, message.mediaFileId);
+  const filePath = await getFile(botConfig.botToken, message.mediaFileId);
+  if (!filePath) {
+    return NextResponse.json({ error: 'Failed to resolve file path' }, { status: 500 });
+  }
+
+  const fileData = await downloadFile(botConfig.botToken, filePath);
   if (!fileData) {
     return NextResponse.json({ error: 'Failed to download file' }, { status: 500 });
   }

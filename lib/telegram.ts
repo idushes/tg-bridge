@@ -1,4 +1,4 @@
-import type { BotInfo, Message, TelegramUpdate } from './types';
+import type { BotInfo, TelegramUpdate } from './types';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
 
@@ -115,6 +115,46 @@ export async function downloadFile(botToken: string, filePath: string): Promise<
     return new Uint8Array(arrayBuffer);
   } catch {
     return null;
+  }
+}
+
+export async function sendPhotoFile(
+  botToken: string,
+  chatId: number,
+  file: File,
+  caption?: string
+): Promise<{ ok: boolean; fileId?: string }> {
+  try {
+    const formData = new FormData();
+    formData.set('chat_id', String(chatId));
+    formData.set('photo', file);
+
+    if (caption) {
+      formData.set('caption', caption);
+    }
+
+    const response = await fetch(`${TELEGRAM_API_BASE}/bot${botToken}/sendPhoto`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json() as {
+      ok: boolean;
+      result?: {
+        photo?: Array<{ file_id: string }>;
+      };
+    };
+
+    if (!data.ok) {
+      return { ok: false };
+    }
+
+    const photo = data.result?.photo;
+    const fileId = photo && photo.length > 0 ? photo[photo.length - 1].file_id : undefined;
+
+    return { ok: true, fileId };
+  } catch {
+    return { ok: false };
   }
 }
 
