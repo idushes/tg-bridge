@@ -8,6 +8,28 @@ interface BotWithChats extends BotConfig {
   chats: ChatMeta[];
 }
 
+function TelegramLoginButton() {
+  useEffect(() => {
+    const botId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
+    if (!botId) return;
+
+    const container = document.getElementById('telegram-login-btn');
+    if (!container || container.children.length > 0) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?21';
+    script.setAttribute('data-telegram-login', botId);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-radius', '10');
+    script.setAttribute('data-request-access', 'write');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.async = true;
+    container.appendChild(script);
+  }, []);
+
+  return <div id="telegram-login-btn" />;
+}
+
 export default function AdminClient() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: number; name: string } | null>(null);
@@ -35,36 +57,6 @@ export default function AdminClient() {
   useEffect(() => {
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (user) return;
-
-    const botId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
-    if (!botId) return;
-
-    const existingScript = document.querySelector('script[src*="telegram-widget.js"][data-telegram-login]');
-    if (existingScript) return;
-
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?21';
-    script.setAttribute('data-telegram-login', botId);
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '10');
-    script.setAttribute('data-request-access', 'write');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.async = true;
-
-    const container = document.getElementById('telegram-login');
-    if (container) {
-      container.appendChild(script);
-    }
-
-    return () => {
-      if (container && container.contains(script)) {
-        container.removeChild(script);
-      }
-    };
-  }, [user]);
 
   const checkAuth = async () => {
     const tgId = localStorage.getItem('telegram_id');
@@ -249,9 +241,11 @@ export default function AdminClient() {
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
           <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
           
-          <div className="flex justify-center" id="telegram-login" />
+          <div className="flex justify-center mb-4">
+            <TelegramLoginButton />
+          </div>
           
-          <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
             <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300">
               ← На главную
             </Link>
