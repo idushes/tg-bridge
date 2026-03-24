@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { registerServiceWorker } from '@/lib/registerServiceWorker';
 
 interface UseChatNotificationsOptions {
   token: string;
@@ -49,7 +50,10 @@ export function useChatNotifications({ token, currentChatId }: UseChatNotificati
     let cancelled = false;
 
     const setupPush = async () => {
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      const registration = await registerServiceWorker();
+      if (!registration) {
+        return;
+      }
 
       if (Notification.permission === 'default') {
         await Notification.requestPermission();

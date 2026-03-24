@@ -833,16 +833,14 @@ export default function ChatClient({
                                 <video src={mediaUrl} controls className="max-h-[420px] w-full" />
                               )}
                               {message.mediaType === 'voice' && (
-                                <div className="flex items-center gap-3 px-3 py-3">
-                                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4f8fd0] text-lg text-white shadow-[0_10px_24px_rgba(79,143,208,0.3)]">
-                                    ▶
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="mb-2 h-1.5 rounded-full bg-black/10 dark:bg-white/10">
-                                      <div className="h-full w-1/3 rounded-full bg-[#4f8fd0]" />
-                                    </div>
-                                    <audio src={mediaUrl} controls className="w-[260px] max-w-full" />
+                                <div className="min-w-[240px] max-w-full px-3 py-3">
+                                  <div className="mb-2 flex items-center gap-2 text-[12px] font-medium text-[#5f7e99] dark:text-[#9bb8d1]">
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#4f8fd0] text-sm text-white shadow-[0_8px_18px_rgba(79,143,208,0.24)]">
+                                      ♪
+                                    </span>
+                                    <span>Голосовое сообщение</span>
                                   </div>
+                                  <audio src={mediaUrl} controls preload="metadata" className="block w-full max-w-[280px]" />
                                 </div>
                               )}
                               {message.mediaType === 'document' && (
