@@ -147,6 +147,7 @@ export default function ChatClient({
 }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { liveChats, setLiveChats } = useLiveChats({ token: inviteToken, initialChats: chats });
+  const [activeChatId, setActiveChatId] = useState(chatId);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -166,8 +167,8 @@ export default function ChatClient({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const activeChat = useMemo(
-    () => liveChats.find((chat) => chat.participantChatId === chatId) ?? null,
-    [chatId, liveChats]
+    () => liveChats.find((chat) => chat.participantChatId === activeChatId) ?? null,
+    [activeChatId, liveChats]
   );
 
   const visibleMessages = useMemo(() => {
@@ -193,7 +194,7 @@ export default function ChatClient({
     }
   };
 
-  useChatNotifications({ token: inviteToken, currentChatId: chatId });
+  useChatNotifications({ token: inviteToken, currentChatId: activeChatId });
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -230,8 +231,23 @@ export default function ChatClient({
   }, [activeChat, inviteToken]);
 
   useEffect(() => {
+    setActiveChatId(chatId);
+  }, [chatId]);
+
+  useEffect(() => {
     setLiveChats(chats);
   }, [chats, setLiveChats]);
+
+  useEffect(() => {
+    const baseMessages = activeChatId === chatId ? initialMessages : [];
+    setMessages(baseMessages);
+    setPendingMessages([]);
+    setLoadedMediaIds({});
+    setFreshMessageIds([]);
+    latestSeqRef.current = getMaxSeq(baseMessages);
+    messageIdsRef.current = new Set(baseMessages.map((message) => message.id));
+    previousMessageCountRef.current = baseMessages.length;
+  }, [activeChatId, chatId, initialMessages]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -246,7 +262,7 @@ export default function ChatClient({
   const syncMessages = useCallback(async () => {
     try {
       const response = await fetch(
-        `/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}&t=${Date.now()}`,
+        `/api/chats/${activeChatId}/messages?inviteToken=${inviteToken}&botId=${botId}&t=${Date.now()}`,
         { cache: 'no-store' }
       );
 
@@ -278,7 +294,7 @@ export default function ChatClient({
     } catch (error) {
       console.error('Error syncing messages:', error);
     }
-  }, [botId, chatId, inviteToken]);
+  }, [activeChatId, botId, inviteToken]);
 
   useEffect(() => {
     if (freshMessageIds.length === 0) {
@@ -309,7 +325,7 @@ export default function ChatClient({
       }
 
       source = new EventSource(
-        `/api/chats/${chatId}/events?inviteToken=${inviteToken}&lastSeq=${latestSeqRef.current}`
+        `/api/chats/${activeChatId}/events?inviteToken=${inviteToken}&lastSeq=${latestSeqRef.current}`
       );
 
       source.addEventListener('message', ((event: MessageEvent<string>) => {
@@ -354,7 +370,7 @@ export default function ChatClient({
         window.clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [chatId, inviteToken, syncMessages]);
+  }, [activeChatId, inviteToken, syncMessages]);
 
   useEffect(() => {
     const hasNewMessages = visibleMessages.length > previousMessageCountRef.current;
@@ -412,7 +428,7 @@ export default function ChatClient({
 
     try {
       const response = await fetch(
-        `/api/chats/${chatId}/send?inviteToken=${inviteToken}&botId=${botId}`,
+        `/api/chats/${activeChatId}/send?inviteToken=${inviteToken}&botId=${botId}`,
         file
           ? {
               method: 'POST',
@@ -489,7 +505,7 @@ export default function ChatClient({
     if (!message.mediaFileId) {
       return null;
     }
-    return `/api/media/${message.id}?inviteToken=${inviteToken}&botId=${botId}&chatId=${chatId}`;
+    return `/api/media/${message.id}?inviteToken=${inviteToken}&botId=${botId}&chatId=${activeChatId}`;
   };
 
   const groupedMessages = useMemo(() => {
@@ -533,15 +549,16 @@ export default function ChatClient({
           <div className="flex-1 overflow-y-auto px-2 py-2">
             {liveChats.map((chat) => {
               const chatName = getChatName(chat);
-              const isActive = chat.participantChatId === chatId;
+              const isActive = chat.participantChatId === activeChatId;
 
               return (
-                <Link
+                <button
                   key={chat.participantChatId}
-                  href={`/chat/${inviteToken}/${chat.participantChatId}`}
-                  prefetch
-                  scroll={false}
-                  onClick={() => markChatAsRead(inviteToken, chat)}
+                  type="button"
+                  onClick={() => {
+                    markChatAsRead(inviteToken, chat);
+                    setActiveChatId(chat.participantChatId);
+                  }}
                   className={`relative overflow-hidden flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
                     isActive
                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
@@ -573,7 +590,7 @@ export default function ChatClient({
                       )}
                     </div>
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>
