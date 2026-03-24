@@ -158,7 +158,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                 return (
                   <Link
                     key={chat.participantChatId}
-                    href={`/chat/${token}/${chat.participantChatId}`}
+                    href={`/chat/${token}`}
                     prefetch
                     scroll={false}
                     onClick={() => markChatAsRead(token, chat)}

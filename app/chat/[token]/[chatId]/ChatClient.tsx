@@ -14,6 +14,27 @@ function getActiveChatStorageKey(inviteToken: string) {
   return `tgBridgeActiveChat:${inviteToken}`;
 }
 
+function getMessageCacheKey(inviteToken: string, chatId: number) {
+  return `tgBridgeChatMessages:${inviteToken}:${chatId}`;
+}
+
+function readCachedMessages(inviteToken: string, chatId: number): Message[] {
+  try {
+    const cached = sessionStorage.getItem(getMessageCacheKey(inviteToken, chatId));
+    return cached ? JSON.parse(cached) as Message[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedMessages(inviteToken: string, chatId: number, messages: Message[]) {
+  try {
+    sessionStorage.setItem(getMessageCacheKey(inviteToken, chatId), JSON.stringify(messages));
+  } catch {
+    // ignore cache write failures
+  }
+}
+
 interface PendingMessage {
   clientId: string;
   optimisticMessage: Message;
@@ -277,14 +298,22 @@ export default function ChatClient({
 
   useEffect(() => {
     const baseMessages = activeChatId === chatId ? initialMessages : [];
-    setMessages(baseMessages);
+    const cachedMessages = activeChatId === chatId && baseMessages.length > 0
+      ? baseMessages
+      : readCachedMessages(inviteToken, activeChatId);
+
+    setMessages(cachedMessages);
     setPendingMessages([]);
     setLoadedMediaIds({});
     setFreshMessageIds([]);
-    latestSeqRef.current = getMaxSeq(baseMessages);
-    messageIdsRef.current = new Set(baseMessages.map((message) => message.id));
-    previousMessageCountRef.current = baseMessages.length;
-  }, [activeChatId, chatId, initialMessages]);
+    latestSeqRef.current = getMaxSeq(cachedMessages);
+    messageIdsRef.current = new Set(cachedMessages.map((message) => message.id));
+    previousMessageCountRef.current = cachedMessages.length;
+  }, [activeChatId, chatId, initialMessages, inviteToken]);
+
+  useEffect(() => {
+    writeCachedMessages(inviteToken, activeChatId, messages);
+  }, [activeChatId, inviteToken, messages]);
 
   useEffect(() => {
     const textarea = inputRef.current;
