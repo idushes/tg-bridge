@@ -1,4 +1,5 @@
 import { getChatByInviteToken, listBotChats } from '@/lib/blob';
+import { backfillChatAvatars } from '@/lib/chatAvatars';
 import ChatListClient from './ChatListClient';
 import ChatClient from './[chatId]/ChatClient';
 
@@ -19,8 +20,8 @@ export default async function ChatPage({ params }: { params: Promise<{ token: st
     );
   }
 
-  const chats = await listBotChats(chatData.botId);
   const botConfig = chatData.config;
+  const chats = await backfillChatAvatars(botConfig.botToken, await listBotChats(chatData.botId));
 
   if (chats.length > 0) {
     const initialChat = chats[0];

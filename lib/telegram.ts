@@ -107,6 +107,37 @@ export async function getFile(botToken: string, fileId: string): Promise<string 
   }
 }
 
+export async function getUserProfilePhotoFileId(botToken: string, userId: number): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `${TELEGRAM_API_BASE}/bot${botToken}/getUserProfilePhotos?user_id=${userId}&limit=1`
+    );
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json() as {
+      ok: boolean;
+      result?: {
+        photos?: Array<Array<{ file_id: string }>>;
+      };
+    };
+
+    if (!data.ok) {
+      return null;
+    }
+
+    const firstPhotoSet = data.result?.photos?.[0];
+    if (!firstPhotoSet || firstPhotoSet.length === 0) {
+      return null;
+    }
+
+    return firstPhotoSet[firstPhotoSet.length - 1]?.file_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function downloadFile(botToken: string, filePath: string): Promise<Uint8Array | null> {
   try {
     const response = await fetch(`${TELEGRAM_API_BASE}/file/bot${botToken}/${filePath}`);

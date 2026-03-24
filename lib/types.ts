@@ -15,6 +15,7 @@ export interface ChatMeta {
   participantFirstName?: string;
   participantLastName?: string;
   participantUsername?: string;
+  participantPhotoFileId?: string;
   lastMessageText?: string;
   lastMessageMediaType?: Message['mediaType'];
   lastMessageFrom?: Message['from'];

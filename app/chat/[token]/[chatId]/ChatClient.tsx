@@ -112,6 +112,14 @@ function formatMessageTime(timestamp: string) {
   });
 }
 
+function getChatAvatarUrl(inviteToken: string, chat: ChatMeta) {
+  if (!chat.participantPhotoFileId) {
+    return null;
+  }
+
+  return `/api/chats/${chat.participantChatId}/avatar?inviteToken=${encodeURIComponent(inviteToken)}&v=${encodeURIComponent(chat.updatedAt)}`;
+}
+
 function getMessageStatus(message: Message) {
   if (message.id.startsWith('local-')) {
     return 'pending';
@@ -187,6 +195,7 @@ export default function ChatClient({
   const [loadedMediaIds, setLoadedMediaIds] = useState<Record<string, boolean>>({});
   const [expandedPhoto, setExpandedPhoto] = useState<{ src: string; alt: string } | null>(null);
   const [freshMessageIds, setFreshMessageIds] = useState<string[]>([]);
+  const [failedAvatarIds, setFailedAvatarIds] = useState<Record<number, boolean>>({});
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
   const previousMessageCountRef = useRef(initialMessages.length);
   const latestSeqRef = useRef(getMaxSeq(initialMessages));
@@ -667,12 +676,26 @@ export default function ChatClient({
                        : 'text-[#223140] hover:bg-[#e8f0f7] dark:text-white dark:hover:bg-[#1f2c39]'
                     }`}
                   >
-                   <div className={`flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                   <div className={`relative flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold ${
                      isActive
                        ? 'bg-white/20 text-white'
                        : 'bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]'
-                   }`}>
-                    {getInitials(chatName)}
+                    }`}>
+                    {chat.participantPhotoFileId && !failedAvatarIds[chat.participantChatId] ? (
+                      <Image
+                        src={getChatAvatarUrl(inviteToken, chat)!}
+                        alt={chatName}
+                        fill
+                        unoptimized
+                        sizes="52px"
+                        className="object-cover"
+                        onError={() => {
+                          setFailedAvatarIds((current) => ({ ...current, [chat.participantChatId]: true }));
+                        }}
+                      />
+                    ) : (
+                      getInitials(chatName)
+                    )}
                    </div>
                    <div className="min-w-0 flex-1">
                      <div className="flex items-center gap-3">
@@ -707,8 +730,22 @@ export default function ChatClient({
               >
                 ←
               </Link>
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]">
-                {getInitials(currentTitle)}
+              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]">
+                {activeChat?.participantPhotoFileId && !failedAvatarIds[activeChat.participantChatId] ? (
+                  <Image
+                    src={getChatAvatarUrl(inviteToken, activeChat)!}
+                    alt={currentTitle}
+                    fill
+                    unoptimized
+                    sizes="44px"
+                    className="object-cover"
+                    onError={() => {
+                      setFailedAvatarIds((current) => ({ ...current, [activeChat.participantChatId]: true }));
+                    }}
+                  />
+                ) : (
+                  getInitials(currentTitle)
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[16px] font-semibold text-[#233547] dark:text-[#f4f7fb]">{currentTitle}</div>

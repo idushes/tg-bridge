@@ -53,6 +53,7 @@ export function initDb() {
           participant_first_name text,
           participant_last_name text,
           participant_username text,
+          participant_photo_file_id text,
           last_message_text text,
           last_message_media_type text,
           last_message_from text,
@@ -66,6 +67,7 @@ export function initDb() {
       await sql`alter table chats add column if not exists last_message_text text`;
       await sql`alter table chats add column if not exists last_message_media_type text`;
       await sql`alter table chats add column if not exists last_message_from text`;
+      await sql`alter table chats add column if not exists participant_photo_file_id text`;
 
       await sql`create index if not exists chats_bot_updated_idx on chats (bot_id, updated_at desc)`;
 

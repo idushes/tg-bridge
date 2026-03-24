@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
@@ -66,6 +67,14 @@ function formatUpdatedAt(timestamp: string) {
   return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
+function getChatAvatarUrl(token: string, chat: ChatMeta) {
+  if (!chat.participantPhotoFileId) {
+    return null;
+  }
+
+  return `/api/chats/${chat.participantChatId}/avatar?inviteToken=${encodeURIComponent(token)}&v=${encodeURIComponent(chat.updatedAt)}`;
+}
+
 interface ChatListClientProps {
   token: string;
   botName: string;
@@ -77,6 +86,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [search, setSearch] = useState('');
   const [copied, setCopied] = useState(false);
+  const [failedAvatarIds, setFailedAvatarIds] = useState<Record<number, boolean>>({});
   const { liveChats } = useLiveChats({ token, initialChats: chats });
   const { canInstall, promptInstall } = useInstallPrompt();
 
@@ -199,8 +209,22 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
                     onClick={() => markChatAsRead(token, chat)}
                       className="relative flex items-center gap-3 rounded-[0.85rem] px-3 py-2.5 transition hover:bg-[#e8f0f7] dark:hover:bg-[#1f2c39]"
                   >
-                      <div className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]">
-                       {getInitials(chatName)}
+                      <div className="relative flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]">
+                        {chat.participantPhotoFileId && !failedAvatarIds[chat.participantChatId] ? (
+                          <Image
+                            src={getChatAvatarUrl(token, chat)!}
+                            alt={chatName}
+                            fill
+                            unoptimized
+                            sizes="52px"
+                            className="object-cover"
+                            onError={() => {
+                              setFailedAvatarIds((current) => ({ ...current, [chat.participantChatId]: true }));
+                            }}
+                          />
+                        ) : (
+                          getInitials(chatName)
+                        )}
                      </div>
                      <div className="min-w-0 flex-1">
                        <div className="flex items-center gap-3">

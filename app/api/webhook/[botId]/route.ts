@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBotConfig, getChatMeta, saveChatMeta, addMessageToChat } from '@/lib/blob';
 import { sendChatPushNotifications } from '@/lib/push';
-import { extractMessageFromUpdate } from '@/lib/telegram';
+import { extractMessageFromUpdate, getUserProfilePhotoFileId } from '@/lib/telegram';
 import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,6 +30,8 @@ export async function POST(
     }
 
     let existingChat = await getChatMeta(botIdNum, messageData.chatId);
+    const participantPhotoFileId = existingChat?.participantPhotoFileId
+      ?? await getUserProfilePhotoFileId(botConfig.botToken, messageData.chatId);
 
     // Create new chat if doesn't exist
     if (!existingChat) {
@@ -40,6 +42,7 @@ export async function POST(
         participantFirstName: update.message?.from?.first_name,
         participantLastName: update.message?.from?.last_name,
         participantUsername: update.message?.from?.username,
+        participantPhotoFileId: participantPhotoFileId ?? undefined,
         lastMessageText: undefined,
         lastMessageMediaType: undefined,
         lastMessageFrom: undefined,
@@ -57,6 +60,7 @@ export async function POST(
       // Just update chat timestamp, don't save command
       const updatedMeta: ChatMeta = {
         ...existingChat,
+        participantPhotoFileId: participantPhotoFileId ?? existingChat.participantPhotoFileId,
         updatedAt: new Date().toISOString(),
       };
       await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
@@ -78,6 +82,7 @@ export async function POST(
     // Update chat metadata
     const updatedMeta: ChatMeta = {
       ...existingChat,
+      participantPhotoFileId: participantPhotoFileId ?? existingChat.participantPhotoFileId,
       lastMessageText: message.text,
       lastMessageMediaType: message.mediaType,
       lastMessageFrom: message.from,

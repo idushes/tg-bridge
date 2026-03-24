@@ -26,6 +26,7 @@ type ChatRow = {
   participant_first_name: string | null;
   participant_last_name: string | null;
   participant_username: string | null;
+  participant_photo_file_id: string | null;
   last_message_text: string | null;
   last_message_media_type: Message['mediaType'] | null;
   last_message_from: Message['from'] | null;
@@ -89,6 +90,7 @@ function mapChat(row: ChatRow): ChatMeta {
     participantFirstName: row.participant_first_name ?? undefined,
     participantLastName: row.participant_last_name ?? undefined,
     participantUsername: row.participant_username ?? undefined,
+    participantPhotoFileId: row.participant_photo_file_id ?? undefined,
     lastMessageText: row.last_message_text ?? undefined,
     lastMessageMediaType: row.last_message_media_type ?? undefined,
     lastMessageFrom: row.last_message_from ?? undefined,
@@ -209,6 +211,7 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       participant_first_name,
       participant_last_name,
       participant_username,
+      participant_photo_file_id,
       last_message_text,
       last_message_media_type,
       last_message_from,
@@ -223,6 +226,7 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       ${meta.participantFirstName ?? null},
       ${meta.participantLastName ?? null},
       ${meta.participantUsername ?? null},
+      ${meta.participantPhotoFileId ?? null},
       ${meta.lastMessageText ?? null},
       ${meta.lastMessageMediaType ?? null},
       ${meta.lastMessageFrom ?? null},
@@ -235,6 +239,7 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       participant_first_name = excluded.participant_first_name,
       participant_last_name = excluded.participant_last_name,
       participant_username = excluded.participant_username,
+      participant_photo_file_id = excluded.participant_photo_file_id,
       last_message_text = excluded.last_message_text,
       last_message_media_type = excluded.last_message_media_type,
       last_message_from = excluded.last_message_from,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChatByInviteToken, listUserBots, listBotChats } from '@/lib/blob';
+import { backfillChatAvatars } from '@/lib/chatAvatars';
 
 // GET /api/chats?botId=123 - list all chats for a bot
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid invite token' }, { status: 404 });
     }
 
-    const chats = await listBotChats(chatData.botId);
+    const chats = await backfillChatAvatars(chatData.config.botToken, await listBotChats(chatData.botId));
     return NextResponse.json(
       { chats },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
@@ -37,6 +38,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Bot not found or not owned by user' }, { status: 404 });
   }
 
-  const chats = await listBotChats(parseInt(botId));
+  const chats = await backfillChatAvatars(bot.botToken, await listBotChats(parseInt(botId)));
   return NextResponse.json({ chats });
 }
