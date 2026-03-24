@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBotConfig, getChatMeta, saveChatMeta, addMessageToChat } from '@/lib/blob';
 import { sendChatPushNotifications } from '@/lib/push';
-import { extractMessageFromUpdate, getUserProfilePhotoFileId } from '@/lib/telegram';
+import { extractMessageFromUpdate, getUserProfilePhotoFileId, sendMessage } from '@/lib/telegram';
 import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+
+const UNSUPPORTED_MESSAGE_TEXT = 'Этот тип сообщения пока не поддерживается в веб-чате. Отправьте текст, фото, видео, голосовое или документ.';
 
 export async function POST(
   request: NextRequest,
@@ -64,6 +66,26 @@ export async function POST(
         updatedAt: new Date().toISOString(),
       };
       await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (messageData.unsupportedMessageType) {
+      const notified = await sendMessage(botConfig.botToken, messageData.chatId, UNSUPPORTED_MESSAGE_TEXT);
+      if (!notified) {
+        console.error('Failed to send unsupported message notice:', {
+          botId: botIdNum,
+          chatId: messageData.chatId,
+          unsupportedMessageType: messageData.unsupportedMessageType,
+        });
+      }
+
+      const updatedMeta: ChatMeta = {
+        ...existingChat,
+        participantPhotoFileId: participantPhotoFileId ?? existingChat.participantPhotoFileId,
+        updatedAt: new Date().toISOString(),
+      };
+      await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);
+
       return NextResponse.json({ ok: true });
     }
 

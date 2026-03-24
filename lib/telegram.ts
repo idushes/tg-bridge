@@ -194,6 +194,7 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
   text: string;
   mediaType?: 'photo' | 'video' | 'voice' | 'document';
   mediaFileId?: string;
+  unsupportedMessageType?: string;
 } | null {
   if (!update.message) return null;
   
@@ -224,14 +225,31 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
       text = msg.caption;
     }
   }
+
+  const unsupportedMessageType = !mediaFileId && !text
+    ? ([
+        ['audio', msg.audio],
+        ['sticker', msg.sticker],
+        ['animation', msg.animation],
+        ['video_note', msg.video_note],
+        ['contact', msg.contact],
+        ['location', msg.location],
+        ['venue', msg.venue],
+        ['poll', msg.poll],
+        ['dice', msg.dice],
+        ['game', msg.game],
+        ['invoice', msg.invoice],
+      ] as Array<[string, unknown]>).find(([, value]) => Boolean(value))?.[0]
+    : undefined;
   
-  if (!text && !mediaFileId) return null;
+  if (!text && !mediaFileId && !unsupportedMessageType) return null;
   
   return {
     chatId: msg.chat.id,
     text,
     mediaType,
     mediaFileId,
+    unsupportedMessageType,
   };
 }
 

@@ -78,6 +78,17 @@ export interface TelegramUpdate {
     video?: { file_id: string };
     voice?: { file_id: string };
     document?: { file_id: string };
+    audio?: { file_id: string };
+    sticker?: { file_id: string };
+    animation?: { file_id: string };
+    video_note?: { file_id: string };
+    contact?: Record<string, unknown>;
+    location?: Record<string, unknown>;
+    venue?: Record<string, unknown>;
+    poll?: Record<string, unknown>;
+    dice?: Record<string, unknown>;
+    game?: Record<string, unknown>;
+    invoice?: Record<string, unknown>;
     caption?: string;
   };
 }
