@@ -571,8 +571,8 @@ export default function ChatClient({
   return (
     <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
-        <aside className="hidden w-[340px] shrink-0 overflow-hidden border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:flex md:flex-col">
-          <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5">
+        <aside className="hidden w-[26rem] shrink-0 overflow-hidden border-r border-[#d7e2ec] bg-[#f7fbff] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col">
+          <div className="border-b border-[#d7e2ec] px-4 pb-4 pt-5 dark:border-[#1e2b38]">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
@@ -596,12 +596,12 @@ export default function ChatClient({
                     markChatAsRead(inviteToken, chat);
                     setActiveChatId(chat.participantChatId);
                   }}
-                  className={`relative overflow-hidden flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
-                    isActive
-                      ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
-                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
-                  }`}
-                >
+                   className={`relative overflow-hidden flex items-center gap-3 rounded-xl px-3 py-3 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
+                     isActive
+                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
+                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
+                   }`}
+                 >
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
                     isActive
                       ? 'bg-white/20 text-white'
@@ -633,8 +633,8 @@ export default function ChatClient({
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5eef5] dark:bg-[#101b27]">
-          <header className="shrink-0 border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e9f0f6] dark:bg-[#0f1720]">
+          <header className="shrink-0 border-b border-[#d7e2ec] bg-[#f7fbff] px-4 py-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5">
             <div className="flex items-center gap-3">
               <Link
                 href={`/chat/${inviteToken}`}
@@ -665,9 +665,9 @@ export default function ChatClient({
 
           <main
             ref={viewportRef}
-            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.30),rgba(255,255,255,0.08)),radial-gradient(circle_at_top,rgba(255,255,255,0.7),transparent_40%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23b4c7d8%22 fill-opacity=%220.16%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(14,22,33,0.42),rgba(14,22,33,0.76)),radial-gradient(circle_at_top,rgba(55,74,96,0.24),transparent_38%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23354b61%22 fill-opacity=%220.26%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
+            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.04)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23bfd0df%22 fill-opacity=%220.13%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(15,23,32,0.30),rgba(15,23,32,0.18)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%2332465b%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
           >
-            <div className="mx-auto w-full max-w-5xl space-y-4">
+            <div className="mx-auto w-full max-w-[58rem] space-y-4">
               {groupedMessages.map((group) => (
                 <div key={group.label} className="space-y-3">
                   <div className="sticky top-2 z-10 flex justify-center">
@@ -776,7 +776,7 @@ export default function ChatClient({
             </div>
           </main>
 
-          <footer className="shrink-0 border-t border-black/5 bg-white/92 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5 md:py-4">
+          <footer className="shrink-0 border-t border-[#d7e2ec] bg-[#f7fbff] px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5 md:py-4">
             <div className="flex items-end gap-2 md:gap-3">
               <input
                 ref={fileInputRef}

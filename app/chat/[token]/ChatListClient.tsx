@@ -107,8 +107,8 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">
       <div className="flex min-h-screen flex-col pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:flex-row">
-        <aside className="w-full shrink-0 border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:max-w-[27rem]">
-          <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5 md:pt-5">
+        <aside className="w-full shrink-0 border-r border-[#d7e2ec] bg-[#f7fbff] dark:border-[#1e2b38] dark:bg-[#17212b] md:max-w-[26rem]">
+          <div className="border-b border-[#d7e2ec] px-4 pb-4 pt-5 dark:border-[#1e2b38] md:pt-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
@@ -122,14 +122,14 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                   setDarkMode(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
-                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#e2edf7] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
                 aria-label="Переключить тему"
               >
                 {darkMode ? '☀️' : '🌙'}
               </button>
             </div>
 
-            <label className="flex items-center gap-3 rounded-2xl bg-[#f1f6fb] px-4 py-3 text-[#6d8194] dark:bg-[#22303d] dark:text-[#8ea7bf]">
+            <label className="flex items-center gap-3 rounded-xl bg-[#edf3f8] px-4 py-3 text-[#6d8194] dark:bg-[#22303d] dark:text-[#8ea7bf]">
               <span className="text-sm">⌕</span>
               <input
                 value={search}
@@ -162,7 +162,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                     prefetch
                     scroll={false}
                     onClick={() => markChatAsRead(token, chat)}
-                    className="relative overflow-hidden flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] active:bg-[#e6f0f8] hover:bg-[#edf4fa] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 dark:active:bg-[#263543] dark:hover:bg-[#22303d] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]"
+                    className="relative overflow-hidden flex items-center gap-3 rounded-xl px-3 py-3 transition active:scale-[0.992] active:bg-[#e6f0f8] hover:bg-[#edf4fa] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-base font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
                       {getInitials(chatName)}
@@ -190,9 +190,9 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
           </div>
         </aside>
 
-        <section className="hidden flex-1 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.75),_transparent_55%),linear-gradient(180deg,_rgba(222,232,240,0.65)_0%,_rgba(215,227,236,0.4)_100%)] px-8 dark:bg-[radial-gradient(circle_at_top,_rgba(43,57,72,0.46),_transparent_55%),linear-gradient(180deg,_rgba(14,22,33,0.92)_0%,_rgba(18,28,41,0.88)_100%)] md:flex">
+        <section className="hidden flex-1 items-center justify-center bg-[#e9f0f6] px-8 dark:bg-[#0f1720] md:flex">
           <div className="max-w-md text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[30px] bg-white/75 text-4xl shadow-[0_20px_60px_rgba(15,23,42,0.12)] dark:bg-[#17212b]/90">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] bg-white text-4xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] dark:bg-[#17212b]">
               💬
             </div>
             <h2 className="text-3xl font-semibold tracking-tight text-[#1f3143] dark:text-[#eef5fb]">Выберите диалог</h2>
