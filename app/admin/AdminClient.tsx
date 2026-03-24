@@ -5,6 +5,7 @@ import type { BotConfig } from '@/lib/types';
 import Link from 'next/link';
 
 export default function AdminClient() {
+  const telegramBotId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: number; name: string } | null>(null);
   const [bots, setBots] = useState<BotConfig[]>([]);
@@ -30,6 +31,39 @@ export default function AdminClient() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (loading || user) {
+      return;
+    }
+
+    const container = document.getElementById('telegram-login-btn');
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = '';
+
+    if (!telegramBotId) {
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://telegram.org/js/telegram-widget.js?22';
+    script.async = true;
+    script.setAttribute('data-telegram-login', telegramBotId);
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-radius', '999');
+    script.setAttribute('data-request-access', 'write');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-userpic', 'false');
+
+    container.appendChild(script);
+
+    return () => {
+      container.innerHTML = '';
+    };
+  }, [loading, telegramBotId, user]);
 
   const checkAuth = async () => {
     const tgId = localStorage.getItem('telegram_id');
@@ -179,6 +213,12 @@ export default function AdminClient() {
           <div className="flex justify-center mb-4">
             <div id="telegram-login-btn" />
           </div>
+
+          {!telegramBotId && (
+            <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
+              Не задан `NEXT_PUBLIC_TELEGRAM_BOT_ID`, поэтому Telegram-кнопка не может загрузиться.
+            </p>
+          )}
           
           <div className="border-t border-[#e4d8ca] pt-4 dark:border-zinc-700">
             <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer">
