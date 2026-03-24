@@ -613,22 +613,22 @@ export default function ChatClient({
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
+    <div className="h-screen overflow-hidden bg-[#ebe4d8] text-[#293241] transition-colors dark:bg-[#0e1621] dark:text-white">
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
-        <aside className="hidden w-[26rem] shrink-0 overflow-hidden border-r border-[#d7e2ec] bg-[#f7fbff] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col">
-          <div className="border-b border-[#d7e2ec] px-4 pb-4 pt-5 dark:border-[#1e2b38]">
+        <aside className="hidden w-[26rem] shrink-0 overflow-hidden border-r border-[#ddd2c3] bg-[#fbf7f0] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col">
+          <div className="border-b border-[#ddd2c3] px-4 pb-4 pt-5 dark:border-[#1e2b38]">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a7966] dark:text-[#6c8299]">
                   Telegram Bridge
                 </p>
-                <h1 className="mt-1 text-2xl font-semibold text-[#182533] dark:text-[#f5f7fb]">Чаты</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-[#293241] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
             </div>
             <button
               type="button"
               onClick={copyBotLink}
-              className="flex items-center justify-between rounded-xl bg-[#edf3f8] px-4 py-3 text-sm text-[#53728d] transition hover:bg-[#e3edf6] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+              className="flex items-center justify-between rounded-xl bg-[#f2e9de] px-4 py-3 text-sm text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
             >
               <span className="truncate">{copiedBotLink ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
               <span className="ml-3 shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
@@ -637,7 +637,7 @@ export default function ChatClient({
               <button
                 type="button"
                 onClick={() => void promptInstall()}
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#37AEE2] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f9dd0]"
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#4f8fd0] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#437bb3]"
               >
                 <span>Установить как приложение</span>
                 <span className="ml-3 shrink-0">＋</span>
@@ -658,32 +658,32 @@ export default function ChatClient({
                     markChatAsRead(inviteToken, chat);
                     setActiveChatId(chat.participantChatId);
                   }}
-                   className={`relative overflow-hidden flex items-center gap-3 rounded-xl px-3 py-3 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
+                    className={`relative overflow-hidden flex items-center gap-3 rounded-xl px-3 py-3 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(79,143,208,0.16),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
                      isActive
-                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
-                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
+                        ? 'bg-[#4f8fd0] text-white shadow-[0_14px_30px_rgba(79,143,208,0.24)] dark:bg-[#2b5278]'
+                       : 'active:bg-[#ece2d4] hover:bg-[#f2e9de] dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
                    }`}
                  >
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
                     isActive
                       ? 'bg-white/20 text-white'
-                      : 'bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]'
+                       : 'bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0] text-white shadow-[0_10px_20px_rgba(79,143,208,0.24)]'
                   }`}>
                     {getInitials(chatName)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
                       <p className="truncate text-[15px] font-semibold">{chatName}</p>
-                      <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#8ea0b2] dark:text-[#6d8298]'}`}>
+                      <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#9a8c7a] dark:text-[#6d8298]'}`}>
                         {formatSidebarTime(chat.updatedAt)}
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-2">
-                      <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#73879c] dark:text-[#8ba2b8]'}`}>
+                      <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#7b7164] dark:text-[#8ba2b8]'}`}>
                         {getChatPreview(chat)}
                       </p>
                       {!isActive && getUnreadCount(inviteToken, chat) > 0 && (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/95 px-1.5 text-[11px] font-semibold text-[#419fd9] shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/95 px-1.5 text-[11px] font-semibold text-[#4f8fd0] shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
                           {getUnreadCount(inviteToken, chat)}
                         </span>
                       )}
@@ -695,21 +695,21 @@ export default function ChatClient({
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e9f0f6] dark:bg-[#0f1720]">
-          <header className="shrink-0 border-b border-[#d7e2ec] bg-[#f7fbff] px-4 py-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f3ede3] dark:bg-[#0f1720]">
+          <header className="shrink-0 border-b border-[#ddd2c3] bg-[#fbf7f0] px-4 py-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5">
             <div className="flex items-center gap-3">
               <Link
                 href={`/chat/${inviteToken}`}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f1e7da] text-lg text-[#746958] transition hover:bg-[#e8dccd] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
               >
                 ←
               </Link>
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-sm font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0] text-sm font-semibold text-white shadow-[0_10px_20px_rgba(79,143,208,0.24)]">
                 {getInitials(currentTitle)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[16px] font-semibold text-[#162433] dark:text-[#f4f7fb]">{currentTitle}</div>
-                <div className="truncate text-[12px] text-[#72869b] dark:text-[#88a0b7]">{currentSubtitle}</div>
+                <div className="truncate text-[16px] font-semibold text-[#293241] dark:text-[#f4f7fb]">{currentTitle}</div>
+                <div className="truncate text-[12px] text-[#7f7468] dark:text-[#88a0b7]">{currentSubtitle}</div>
               </div>
               <button
                 onClick={() => {
@@ -717,7 +717,7 @@ export default function ChatClient({
                   setDarkMode(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
-                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#f1e7da] text-lg text-[#746958] transition hover:bg-[#e8dccd] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
                 aria-label="Переключить тему"
               >
                 {darkMode ? '☀️' : '🌙'}
@@ -727,13 +727,13 @@ export default function ChatClient({
 
           <main
             ref={viewportRef}
-            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.04)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23bfd0df%22 fill-opacity=%220.13%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(15,23,32,0.30),rgba(15,23,32,0.18)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%2332465b%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
+            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,251,245,0.72),rgba(243,237,227,0.88)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23c8b59f%22 fill-opacity=%220.12%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(15,23,32,0.30),rgba(15,23,32,0.18)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%2332465b%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
           >
             <div className="mx-auto w-full max-w-[58rem] space-y-4">
               {groupedMessages.map((group) => (
                 <div key={group.label} className="space-y-3">
                   <div className="sticky top-2 z-10 flex justify-center">
-                    <div className="rounded-full bg-white/88 px-3 py-1 text-[11px] font-medium text-[#6a8197] shadow-sm backdrop-blur dark:bg-[#1f2c3a]/92 dark:text-[#9cb2c6]">
+                    <div className="rounded-full bg-[#fffaf4]/92 px-3 py-1 text-[11px] font-medium text-[#837565] shadow-sm backdrop-blur dark:bg-[#1f2c3a]/92 dark:text-[#9cb2c6]">
                       {group.label}
                     </div>
                   </div>
@@ -750,8 +750,8 @@ export default function ChatClient({
                         <div
                           className={`max-w-[82%] rounded-[20px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
                             isUser
-                              ? 'rounded-br-[10px] bg-[#d9f6c7] text-[#18351f] dark:bg-[#2b5278] dark:text-white'
-                              : 'rounded-bl-[10px] bg-white text-[#1e2e3d] dark:bg-[#182533] dark:text-[#eef5fb]'
+                              ? 'rounded-br-[10px] bg-[#dceccf] text-[#274126] dark:bg-[#2b5278] dark:text-white'
+                              : 'rounded-bl-[10px] bg-[#fffaf4] text-[#2b3440] dark:bg-[#182533] dark:text-[#eef5fb]'
                           }`}
                         >
                           {message.mediaType && mediaUrl && (
@@ -763,7 +763,7 @@ export default function ChatClient({
                                   className="relative block min-w-[180px] max-w-[280px] cursor-zoom-in overflow-hidden rounded-[16px] text-left outline-none transition hover:scale-[1.01]"
                                 >
                                   {!loadedMediaIds[message.id] && (
-                                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#dbe6ef] to-[#cddbe7] dark:from-[#22303d] dark:to-[#1c2732]" />
+                                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#efe4d6] to-[#e2d2c1] dark:from-[#22303d] dark:to-[#1c2732]" />
                                   )}
                                   <Image
                                     src={mediaUrl}
@@ -786,12 +786,12 @@ export default function ChatClient({
                               )}
                               {message.mediaType === 'voice' && (
                                 <div className="flex items-center gap-3 px-3 py-3">
-                                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4ea4f6] text-lg text-white shadow-[0_10px_24px_rgba(78,164,246,0.35)]">
+                                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4f8fd0] text-lg text-white shadow-[0_10px_24px_rgba(79,143,208,0.3)]">
                                     ▶
                                   </span>
                                   <div className="min-w-0 flex-1">
                                     <div className="mb-2 h-1.5 rounded-full bg-black/10 dark:bg-white/10">
-                                      <div className="h-full w-1/3 rounded-full bg-[#4ea4f6]" />
+                                      <div className="h-full w-1/3 rounded-full bg-[#4f8fd0]" />
                                     </div>
                                     <audio src={mediaUrl} controls className="w-[260px] max-w-full" />
                                   </div>
@@ -804,7 +804,7 @@ export default function ChatClient({
                                   rel="noopener noreferrer"
                                   className="flex cursor-pointer items-center gap-3 p-4 text-sm font-medium"
                                 >
-                                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#419fd9] text-lg text-white shadow-[0_10px_24px_rgba(65,159,217,0.28)]">📄</span>
+                                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4f8fd0] text-lg text-white shadow-[0_10px_24px_rgba(79,143,208,0.24)]">📄</span>
                                   <span className="min-w-0 flex-1">
                                     <span className="block truncate text-[14px] font-semibold">Документ</span>
                                     <span className="block text-[12px] opacity-70">Открыть вложение</span>
@@ -822,7 +822,7 @@ export default function ChatClient({
 
                           {message.mediaType !== 'photo' && (
                             <div className={`mt-1.5 flex items-center justify-end gap-1 text-[11px] ${
-                              isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
+                              isUser ? 'text-[#6b7c5f] dark:text-[#b7d4f4]' : 'text-[#867766] dark:text-[#8ea7bf]'
                             }`}>
                               <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
                               {isUser && <MessageStatusIcon status={getMessageStatus(message)} />}
@@ -838,7 +838,7 @@ export default function ChatClient({
             </div>
           </main>
 
-          <footer className="shrink-0 border-t border-[#d7e2ec] bg-[#f7fbff] px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5 md:py-4">
+          <footer className="shrink-0 border-t border-[#ddd2c3] bg-[#fbf7f0] px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5 md:py-4">
             <div className="flex items-end gap-2 md:gap-3">
               <input
                 ref={fileInputRef}
@@ -850,19 +850,19 @@ export default function ChatClient({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending}
-                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#edf4fa] text-xl text-[#5b7b94] transition hover:bg-[#e2edf7] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
+                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#f1e7da] text-xl text-[#746958] transition hover:bg-[#e8dccd] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
                 aria-label="Отправить фото"
               >
                 📎
               </button>
-              <div className="flex min-h-12 flex-1 items-end rounded-[28px] bg-[#f1f6fb] px-4 py-3 dark:bg-[#22303d]">
+              <div className="flex min-h-12 flex-1 items-end rounded-[28px] bg-[#f4ece2] px-4 py-3 dark:bg-[#22303d]">
                 <textarea
                   ref={inputRef}
                   value={newMessage}
                   onChange={(event) => setNewMessage(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Напишите сообщение"
-                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#1f2d3b] outline-none placeholder:text-[#8ca2b7] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
+                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2d3540] outline-none placeholder:text-[#a29280] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
                   rows={1}
                   disabled={sending}
                 />
@@ -870,7 +870,7 @@ export default function ChatClient({
               <button
                 onClick={() => void sendPayload()}
                 disabled={!newMessage.trim() || sending}
-                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#56a7f5] text-xl text-white shadow-[0_14px_24px_rgba(86,167,245,0.35)] transition hover:bg-[#4699e7] disabled:cursor-not-allowed disabled:bg-[#a8cfee] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
+                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#4f8fd0] text-xl text-white shadow-[0_14px_24px_rgba(79,143,208,0.32)] transition hover:bg-[#437bb3] disabled:cursor-not-allowed disabled:bg-[#b7c9d9] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
                 aria-label="Отправить"
               >
                 {sending ? '…' : '➤'}

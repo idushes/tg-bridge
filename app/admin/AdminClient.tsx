@@ -158,7 +158,7 @@ export default function AdminClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
+      <div className="flex min-h-screen items-center justify-center bg-[#f3ede3] dark:bg-zinc-900">
         <p className="text-zinc-600 dark:text-zinc-400">Загрузка...</p>
       </div>
     );
@@ -166,9 +166,9 @@ export default function AdminClient() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-        <div className="bg-white dark:bg-zinc-800 p-8 rounded-xl shadow-sm max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#f3ede3] dark:bg-zinc-900">
+        <div className="w-full max-w-md rounded-xl bg-[#fffaf4] p-8 text-center shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0]">
             <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
@@ -180,7 +180,7 @@ export default function AdminClient() {
             <div id="telegram-login-btn" />
           </div>
           
-          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+          <div className="border-t border-[#e4d8ca] pt-4 dark:border-zinc-700">
             <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer">
               ← На главную
             </Link>
@@ -191,8 +191,8 @@ export default function AdminClient() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <header className="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-4">
+    <div className="min-h-screen bg-[#f3ede3] dark:bg-zinc-900">
+      <header className="border-b border-[#e4d8ca] bg-[#fffaf4] px-4 py-4 dark:border-zinc-700 dark:bg-zinc-800">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Панель управления</h1>
@@ -201,7 +201,7 @@ export default function AdminClient() {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 cursor-pointer transition-colors"
+              className="cursor-pointer rounded-lg bg-[#efe3d4] p-2 text-[#6f665b] hover:bg-[#e5d7c5] dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600 transition-colors"
             >
               {darkMode ? '☀️' : '🌙'}
             </button>
@@ -225,14 +225,14 @@ export default function AdminClient() {
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Ваши боты</h2>
           <button
             onClick={() => setShowAddBot(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 cursor-pointer transition-colors"
+            className="cursor-pointer rounded-lg bg-[#4f8fd0] px-4 py-2 font-medium text-white hover:bg-[#437bb3] transition-colors"
           >
             + Добавить бота
           </button>
         </div>
 
         {showAddBot && (
-          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6 mb-6">
+          <div className="mb-6 rounded-xl bg-[#fffaf4] p-6 shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
             <h3 className="font-semibold text-zinc-900 dark:text-white mb-4">Добавить нового бота</h3>
             
             {error && (
@@ -251,7 +251,7 @@ export default function AdminClient() {
                   value={botToken}
                   onChange={(e) => setBotToken(e.target.value)}
                   placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
-                  className="w-full px-4 py-2 border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   className="w-full rounded-lg border border-[#e4d8ca] bg-[#fffdf9] px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#4f8fd0] dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
                 />
               </div>
               
@@ -259,7 +259,7 @@ export default function AdminClient() {
                 <button
                   onClick={addBot}
                   disabled={adding}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 cursor-pointer transition-colors"
+                  className="cursor-pointer rounded-lg bg-[#4f8fd0] px-4 py-2 font-medium text-white hover:bg-[#437bb3] disabled:opacity-50 transition-colors"
                 >
                   {adding ? 'Добавление...' : 'Добавить'}
                 </button>
@@ -269,7 +269,7 @@ export default function AdminClient() {
                     setError('');
                     setBotToken('');
                   }}
-                  className="px-4 py-2 border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 rounded-lg font-medium hover:bg-zinc-50 dark:hover:bg-zinc-700 cursor-pointer transition-colors"
+                  className="cursor-pointer rounded-lg border border-[#e4d8ca] px-4 py-2 font-medium text-zinc-700 hover:bg-[#f7efe5] dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700 transition-colors"
                 >
                   Отмена
                 </button>
@@ -279,11 +279,11 @@ export default function AdminClient() {
         )}
 
         {bots.length === 0 ? (
-          <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-8 text-center">
+          <div className="rounded-xl bg-[#fffaf4] p-8 text-center shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
             <p className="text-zinc-500 dark:text-zinc-400 mb-4">У вас пока нет ботов</p>
             <button
               onClick={() => setShowAddBot(true)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium cursor-pointer"
+              className="cursor-pointer font-medium text-[#4f8fd0] hover:text-[#437bb3] dark:text-blue-400 dark:hover:text-blue-300"
             >
               Добавить первого бота →
             </button>
@@ -291,7 +291,7 @@ export default function AdminClient() {
         ) : (
           <div className="space-y-6">
             {bots.map((bot) => (
-              <div key={bot.botId} className="bg-white dark:bg-zinc-800 rounded-xl shadow-sm p-6">
+              <div key={bot.botId} className="rounded-xl bg-[#fffaf4] p-6 shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-zinc-900 dark:text-white">{bot.botName}</h3>
@@ -305,7 +305,7 @@ export default function AdminClient() {
                   </button>
                 </div>
 
-                <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+                <div className="mb-4 rounded-lg bg-[#f7efe5] p-3 dark:bg-zinc-700">
                   <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Ссылка для родителя:</p>
                   <div className="flex items-center gap-2">
                     <code className="text-sm text-zinc-900 dark:text-white flex-1 overflow-hidden text-ellipsis">
@@ -313,7 +313,7 @@ export default function AdminClient() {
                     </code>
                     <button
                       onClick={() => copyLink(bot.inviteToken)}
-                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 cursor-pointer transition-colors"
+                      className="cursor-pointer rounded-lg bg-[#e8f1fb] px-3 py-1 text-sm text-[#4f8fd0] hover:bg-[#dce9f7] dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800 transition-colors"
                     >
                       Копировать
                     </button>
