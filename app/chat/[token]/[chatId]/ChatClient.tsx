@@ -613,32 +613,34 @@ export default function ChatClient({
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#ebe4d8] text-[#293241] transition-colors dark:bg-[#0e1621] dark:text-white">
+    <div className="h-screen overflow-hidden bg-[#dfe8f1] text-[#223140] transition-colors dark:bg-[#0e1621] dark:text-white">
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
-        <aside className="hidden w-[21.5rem] shrink-0 overflow-hidden border-r border-[#ddd2c3] bg-[#fbf7f0] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col xl:w-[22.5rem]">
-          <div className="border-b border-[#ddd2c3] px-3.5 pb-4 pt-5 dark:border-[#1e2b38] xl:px-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
+        <aside className="hidden w-[22rem] shrink-0 overflow-hidden border-r border-[#cfdbe6] bg-[#f4f8fb] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col xl:w-[23rem]">
+          <div className="border-b border-[#d8e3ec] px-3 pb-3 pt-4 dark:border-[#1e2b38]">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a7966] dark:text-[#6c8299]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7e95ab] dark:text-[#6c8299]">
                   Telegram Bridge
                 </p>
-                <h1 className="mt-1 text-2xl font-semibold text-[#293241] dark:text-[#f5f7fb]">Чаты</h1>
+                <h1 className="mt-1 text-[28px] font-semibold text-[#233547] dark:text-[#f5f7fb]">Чаты</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={copyBotLink}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f0f7] text-[15px] text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+                  aria-label={copiedBotLink ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
+                  title={copiedBotLink ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
+                >
+                  <span className="shrink-0 leading-none">{copiedBotLink ? '✓' : '⧉'}</span>
+                </button>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={copyBotLink}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f2e9de] text-[15px] text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
-              aria-label={copiedBotLink ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
-              title={copiedBotLink ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
-            >
-              <span className="shrink-0 leading-none">{copiedBotLink ? '✓' : '⧉'}</span>
-            </button>
             {canInstall && (
               <button
                 type="button"
                 onClick={() => void promptInstall()}
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#4f8fd0] px-3.5 py-3 text-sm font-medium text-white transition hover:bg-[#437bb3] xl:px-4"
+                className="flex w-full items-center justify-between rounded-xl bg-[#419fd9] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#3793cc] dark:bg-[#3b82c4] dark:hover:bg-[#4a8ecb]"
               >
                 <span>Установить как приложение</span>
                 <span className="ml-3 shrink-0">＋</span>
@@ -646,7 +648,7 @@ export default function ChatClient({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-2 py-2">
+          <div className="flex-1 overflow-y-auto px-1.5 py-2">
             {liveChats.map((chat) => {
               const chatName = getChatName(chat);
               const isActive = chat.participantChatId === activeChatId;
@@ -659,32 +661,32 @@ export default function ChatClient({
                     markChatAsRead(inviteToken, chat);
                     setActiveChatId(chat.participantChatId);
                   }}
-                    className={`relative overflow-hidden flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(79,143,208,0.16),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
+                    className={`relative flex w-full items-center gap-3 rounded-[0.85rem] px-3 py-2.5 text-left transition before:absolute before:inset-0 before:opacity-0 before:transition before:duration-150 ${
                      isActive
-                        ? 'bg-[#4f8fd0] text-white shadow-[0_14px_30px_rgba(79,143,208,0.24)] dark:bg-[#2b5278]'
-                       : 'active:bg-[#ece2d4] hover:bg-[#f2e9de] dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
-                   }`}
-                 >
-                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                       : 'bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0] text-white shadow-[0_10px_20px_rgba(79,143,208,0.24)]'
-                  }`}>
+                        ? 'bg-[#419fd9] text-white shadow-[0_8px_18px_rgba(65,159,217,0.22)] dark:bg-[#2b5278]'
+                       : 'text-[#223140] hover:bg-[#e8f0f7] dark:text-white dark:hover:bg-[#1f2c39]'
+                    }`}
+                  >
+                   <div className={`flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                     isActive
+                       ? 'bg-white/20 text-white'
+                       : 'bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]'
+                   }`}>
                     {getInitials(chatName)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3">
-                      <p className="truncate text-[15px] font-semibold">{chatName}</p>
-                      <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#9a8c7a] dark:text-[#6d8298]'}`}>
-                        {formatSidebarTime(chat.updatedAt)}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#7b7164] dark:text-[#8ba2b8]'}`}>
-                        {getChatPreview(chat)}
-                      </p>
-                      {!isActive && getUnreadCount(inviteToken, chat) > 0 && (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/95 px-1.5 text-[11px] font-semibold text-[#4f8fd0] shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
+                   </div>
+                   <div className="min-w-0 flex-1">
+                     <div className="flex items-center gap-3">
+                       <p className="truncate text-[15px] font-medium">{chatName}</p>
+                       <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#7b93aa] dark:text-[#6d8298]'}`}>
+                         {formatSidebarTime(chat.updatedAt)}
+                       </span>
+                     </div>
+                     <div className="mt-0.5 flex items-center gap-2">
+                       <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#6f8498] dark:text-[#8ba2b8]'}`}>
+                         {getChatPreview(chat)}
+                       </p>
+                       {!isActive && getUnreadCount(inviteToken, chat) > 0 && (
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#419fd9] px-1.5 text-[11px] font-semibold text-white shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
                           {getUnreadCount(inviteToken, chat)}
                         </span>
                       )}
@@ -696,21 +698,21 @@ export default function ChatClient({
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f3ede3] dark:bg-[#0f1720]">
-          <header className="shrink-0 border-b border-[#ddd2c3] bg-[#fbf7f0] px-4 py-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5edf5] dark:bg-[#0f1720]">
+          <header className="shrink-0 border-b border-[#d8e3ec] bg-[#f4f8fb] px-4 py-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5">
             <div className="flex items-center gap-3">
               <Link
                 href={`/chat/${inviteToken}`}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f1e7da] text-lg text-[#746958] transition hover:bg-[#e8dccd] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f0f7] text-lg text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
               >
                 ←
               </Link>
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0] text-sm font-semibold text-white shadow-[0_10px_20px_rgba(79,143,208,0.24)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#68a7db] to-[#4c8fca] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(76,143,202,0.2)]">
                 {getInitials(currentTitle)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[16px] font-semibold text-[#293241] dark:text-[#f4f7fb]">{currentTitle}</div>
-                <div className="truncate text-[12px] text-[#7f7468] dark:text-[#88a0b7]">{currentSubtitle}</div>
+                <div className="truncate text-[16px] font-semibold text-[#233547] dark:text-[#f4f7fb]">{currentTitle}</div>
+                <div className="truncate text-[12px] text-[#6f8498] dark:text-[#88a0b7]">{currentSubtitle}</div>
               </div>
               <button
                 onClick={() => {
@@ -718,7 +720,7 @@ export default function ChatClient({
                   setDarkMode(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
-                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#f1e7da] text-lg text-[#746958] transition hover:bg-[#e8dccd] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#e8f0f7] text-lg text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
                 aria-label="Переключить тему"
               >
                 {darkMode ? '☀️' : '🌙'}
