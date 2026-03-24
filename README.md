@@ -1,4 +1,4 @@
-# TG Bridge
+# Telegram Bridge
 
 Telegram bridge for family/private chats: messages go through a Telegram bot, while the recipient uses a web chat UI that now behaves close to Telegram on desktop and mobile.
 

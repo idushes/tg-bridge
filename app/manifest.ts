@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'TG Bridge',
-    short_name: 'TG Bridge',
+    name: 'Telegram Bridge',
+    short_name: 'Telegram Bridge',
     description: 'Общение с близкими через Telegram в формате web app',
     start_url: '/',
     scope: '/',

@@ -102,7 +102,7 @@ export default function Home() {
                     <div className="h-3 w-3 rounded-full bg-emerald-400/80"></div>
                   </div>
                   <div className="flex-1 rounded-md bg-white px-3 py-1 text-center text-xs text-slate-400 dark:bg-slate-800/50">
-                    chat.tgbridge.com/mama
+                    telegram.lisacorp.com/chat/dsf43tgf2
                   </div>
                 </div>
                 <div className="p-4">
@@ -128,7 +128,7 @@ export default function Home() {
                     <Bot className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">TG Bridge Bot</div>
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">Anna Helper Bot</div>
                     <div className="text-xs text-[#4a83c6] dark:text-[#5fa3ed]">bot</div>
                   </div>
                 </div>
@@ -281,8 +281,8 @@ export default function Home() {
                     <MessageCircle className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Связь не прервется</h3>
-                    <p className="mt-1 text-slate-600 dark:text-slate-400">Мы сохраняем историю последних сообщений. Если закрыть вкладку и открыть заново — переписка будет на месте.</p>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Сообщения приходят сразу</h3>
+                    <p className="mt-1 text-slate-600 dark:text-slate-400">Близкие пишут в простом окне браузера, а вы отвечаете им из привычного Telegram без переключения между сервисами.</p>
                   </div>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function Home() {
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#6fa6d9] to-[#376fb3] text-white">
               <Zap className="h-4 w-4" />
             </span>
-            TG Bridge
+            Telegram Bridge
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Делаем общение с близкими проще, вне зависимости от расстояний и блокировок.
