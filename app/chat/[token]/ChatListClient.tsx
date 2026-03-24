@@ -23,6 +23,25 @@ function getChatName(chat: ChatMeta) {
 }
 
 function getChatSubtitle(chat: ChatMeta) {
+  if (chat.lastMessageMediaType) {
+    const mediaLabel = {
+      photo: 'Фото',
+      video: 'Видео',
+      voice: 'Голосовое',
+      document: 'Документ',
+    }[chat.lastMessageMediaType];
+
+    if (chat.lastMessageText) {
+      return `${mediaLabel}: ${chat.lastMessageText}`;
+    }
+
+    return mediaLabel;
+  }
+
+  if (chat.lastMessageText) {
+    return chat.lastMessageText;
+  }
+
   if (chat.participantUsername) {
     return `@${chat.participantUsername}`;
   }
@@ -137,6 +156,8 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                   <Link
                     key={chat.participantChatId}
                     href={`/chat/${token}/${chat.participantChatId}`}
+                    prefetch
+                    scroll={false}
                     className="flex items-center gap-3 rounded-[22px] px-3 py-3 transition hover:bg-[#edf4fa] dark:hover:bg-[#22303d]"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-base font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">

@@ -1,4 +1,4 @@
-import { getChatByInviteToken, getChatMeta, getChatMessages, listBotChats } from '@/lib/blob';
+import { getChatByInviteToken, listBotChats } from '@/lib/blob';
 import ChatClient from './ChatClient';
 
 export const dynamic = 'force-dynamic';
@@ -20,17 +20,16 @@ export default async function ChatPage({ params }: { params: Promise<{ token: st
     );
   }
 
-  const meta = await getChatMeta(chatData.botId, participantChatId);
-  const messages = await getChatMessages(chatData.botId, participantChatId);
   const chats = await listBotChats(chatData.botId);
-  const partnerName = meta?.participantFirstName || meta?.participantUsername || `Чат ${participantChatId}`;
+  const activeChat = chats.find((chat) => chat.participantChatId === participantChatId);
+  const partnerName = activeChat?.participantFirstName || activeChat?.participantUsername || `Чат ${participantChatId}`;
 
   return (
     <ChatClient 
       inviteToken={token}
       botId={chatData.botId}
       chatId={participantChatId}
-      initialMessages={messages.messages} 
+      initialMessages={[]} 
       partnerName={partnerName} 
       chats={chats}
     />

@@ -52,6 +52,21 @@ function getInitials(name: string) {
     .join('') || 'TG';
 }
 
+function getChatPreview(chat: ChatMeta) {
+  if (chat.lastMessageMediaType) {
+    const mediaLabel = {
+      photo: 'Фото',
+      video: 'Видео',
+      voice: 'Голосовое',
+      document: 'Документ',
+    }[chat.lastMessageMediaType];
+
+    return chat.lastMessageText ? `${mediaLabel}: ${chat.lastMessageText}` : mediaLabel;
+  }
+
+  return chat.lastMessageText || (chat.participantUsername ? `@${chat.participantUsername}` : 'Открыть переписку');
+}
+
 function formatSidebarTime(timestamp: string) {
   return new Date(timestamp).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
@@ -107,6 +122,7 @@ export default function ChatClient({
   const [sending, setSending] = useState(false);
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [hydrated, setHydrated] = useState(false);
+  const [loadedMediaIds, setLoadedMediaIds] = useState<Record<string, boolean>>({});
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
   const previousMessageCountRef = useRef(initialMessages.length);
   const latestSeqRef = useRef(getMaxSeq(initialMessages));
@@ -437,6 +453,8 @@ export default function ChatClient({
                 <Link
                   key={chat.participantChatId}
                   href={`/chat/${inviteToken}/${chat.participantChatId}`}
+                  prefetch
+                  scroll={false}
                   className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition ${
                     isActive
                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
@@ -458,7 +476,7 @@ export default function ChatClient({
                       </span>
                     </div>
                     <p className={`mt-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#73879c] dark:text-[#8ba2b8]'}`}>
-                      {chat.participantUsername ? `@${chat.participantUsername}` : 'Открыть переписку'}
+                      {getChatPreview(chat)}
                     </p>
                   </div>
                 </Link>
@@ -526,9 +544,20 @@ export default function ChatClient({
                           {message.mediaType && mediaUrl && (
                             <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[16px] bg-black/5 dark:bg-black/20`}>
                               {message.mediaType === 'photo' && (
-                                <div className="relative">
-                                  <img src={mediaUrl} alt="Фото" className="max-h-[420px] w-full object-cover" />
-                                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
+                                <div className="relative min-w-[220px]">
+                                  {!loadedMediaIds[message.id] && (
+                                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#dbe6ef] to-[#cddbe7] dark:from-[#22303d] dark:to-[#1c2732]" />
+                                  )}
+                                  <img
+                                    src={mediaUrl}
+                                    alt="Фото"
+                                    onLoad={() => setLoadedMediaIds((current) => ({ ...current, [message.id]: true }))}
+                                    className="max-h-[420px] w-full object-cover"
+                                  />
+                                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
+                                  <div className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
+                                    {hydrated ? formatMessageTime(message.timestamp) : ''}
+                                  </div>
                                 </div>
                               )}
                               {message.mediaType === 'video' && (
@@ -551,14 +580,20 @@ export default function ChatClient({
                             </div>
                           )}
 
-                          {message.text && <p className="whitespace-pre-wrap break-words text-[15px] leading-5">{message.text}</p>}
+                          {message.text && (
+                            <p className={`whitespace-pre-wrap break-words text-[15px] leading-5 ${message.mediaType === 'photo' ? 'px-0.5' : ''}`}>
+                              {message.text}
+                            </p>
+                          )}
 
-                          <div className={`mt-1.5 flex items-center justify-end gap-1 text-[11px] ${
-                            isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
-                          }`}>
-                            <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
-                            {message.id.startsWith('local-') && <span className="text-[10px]">⌛</span>}
-                          </div>
+                          {message.mediaType !== 'photo' && (
+                            <div className={`mt-1.5 flex items-center justify-end gap-1 text-[11px] ${
+                              isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
+                            }`}>
+                              <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
+                              {message.id.startsWith('local-') && <span className="text-[10px]">⌛</span>}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

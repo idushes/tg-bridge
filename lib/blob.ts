@@ -26,6 +26,9 @@ type ChatRow = {
   participant_first_name: string | null;
   participant_last_name: string | null;
   participant_username: string | null;
+  last_message_text: string | null;
+  last_message_media_type: Message['mediaType'] | null;
+  last_message_from: Message['from'] | null;
   message_limit: number;
   created_at: string | Date;
   updated_at: string | Date;
@@ -86,6 +89,9 @@ function mapChat(row: ChatRow): ChatMeta {
     participantFirstName: row.participant_first_name ?? undefined,
     participantLastName: row.participant_last_name ?? undefined,
     participantUsername: row.participant_username ?? undefined,
+    lastMessageText: row.last_message_text ?? undefined,
+    lastMessageMediaType: row.last_message_media_type ?? undefined,
+    lastMessageFrom: row.last_message_from ?? undefined,
     messageLimit: row.message_limit,
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
@@ -203,6 +209,9 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       participant_first_name,
       participant_last_name,
       participant_username,
+      last_message_text,
+      last_message_media_type,
+      last_message_from,
       message_limit,
       created_at,
       updated_at
@@ -214,6 +223,9 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       ${meta.participantFirstName ?? null},
       ${meta.participantLastName ?? null},
       ${meta.participantUsername ?? null},
+      ${meta.lastMessageText ?? null},
+      ${meta.lastMessageMediaType ?? null},
+      ${meta.lastMessageFrom ?? null},
       ${meta.messageLimit},
       ${meta.createdAt},
       ${meta.updatedAt}
@@ -223,6 +235,9 @@ export async function saveChatMeta(botId: number, participantChatId: number, met
       participant_first_name = excluded.participant_first_name,
       participant_last_name = excluded.participant_last_name,
       participant_username = excluded.participant_username,
+      last_message_text = excluded.last_message_text,
+      last_message_media_type = excluded.last_message_media_type,
+      last_message_from = excluded.last_message_from,
       message_limit = excluded.message_limit,
       updated_at = excluded.updated_at
   `;

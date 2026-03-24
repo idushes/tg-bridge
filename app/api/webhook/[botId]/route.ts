@@ -40,6 +40,9 @@ export async function POST(
         participantFirstName: update.message?.from?.first_name,
         participantLastName: update.message?.from?.last_name,
         participantUsername: update.message?.from?.username,
+        lastMessageText: undefined,
+        lastMessageMediaType: undefined,
+        lastMessageFrom: undefined,
         messageLimit: 100,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -75,6 +78,9 @@ export async function POST(
     // Update chat metadata
     const updatedMeta: ChatMeta = {
       ...existingChat,
+      lastMessageText: message.text,
+      lastMessageMediaType: message.mediaType,
+      lastMessageFrom: message.from,
       updatedAt: new Date().toISOString(),
     };
     await saveChatMeta(botIdNum, messageData.chatId, updatedMeta);

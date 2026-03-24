@@ -53,12 +53,19 @@ export function initDb() {
           participant_first_name text,
           participant_last_name text,
           participant_username text,
+          last_message_text text,
+          last_message_media_type text,
+          last_message_from text,
           message_limit integer not null default 100,
           created_at timestamptz not null default now(),
           updated_at timestamptz not null default now(),
           unique (bot_id, participant_chat_id)
         )
       `;
+
+      await sql`alter table chats add column if not exists last_message_text text`;
+      await sql`alter table chats add column if not exists last_message_media_type text`;
+      await sql`alter table chats add column if not exists last_message_from text`;
 
       await sql`create index if not exists chats_bot_updated_idx on chats (bot_id, updated_at desc)`;
 
