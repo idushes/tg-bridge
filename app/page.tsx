@@ -203,41 +203,71 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            
-            <div className="relative flex flex-col rounded-3xl bg-slate-50 p-8 dark:bg-slate-800/50">
-              <div className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
-                1
+          <div className="mx-auto max-w-4xl space-y-5">
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-50 p-6 dark:bg-slate-800/50 sm:p-8">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="flex items-center gap-4 sm:w-64 sm:flex-none">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
+                    1
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4a83c6]/10 text-[#4a83c6] dark:bg-[#5fa3ed]/10 dark:text-[#5fa3ed]">
+                    <Bot className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Создайте бота</h3>
+                </div>
+                <div className="flex-1 text-slate-600 dark:text-slate-400">
+                  <p className="leading-7">
+                    Напишите <strong>@BotFather</strong> в Telegram и отправьте команду <code>/newbot</code>. Сначала укажите имя родственника на русском, например <code>Екатерина Андреевна</code>, затем задайте username на английском с нижними подчеркиваниями, например <code>kate_mama_bot</code> - слово <code>bot</code> в конце обязательно.
+                  </p>
+                </div>
               </div>
-              <Bot className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Создайте бота</h3>
-              <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Напишите <strong>@BotFather</strong> в Telegram и отправьте команду <code>/newbot</code>. Сначала укажите имя родственника на русском, например <code>Екатерина Андреевна</code>, затем задайте username на английском с нижними подчеркиваниями, например <code>kate_mama_bot</code> - слово <code>bot</code> в конце обязательно.
-              </p>
             </div>
 
-            <div className="relative flex flex-col rounded-3xl bg-slate-50 p-8 dark:bg-slate-800/50">
-              <div className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
-                2
-              </div>
-              <ShieldCheck className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Добавьте токен</h3>
-              <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Авторизуйтесь на этом сайте через свой Telegram и вставьте скопированный токен в панель управления.
-              </p>
+            <div className="flex justify-center py-1 text-slate-300 dark:text-slate-600">
+              <ArrowRight className="h-8 w-8 rotate-90" />
             </div>
 
-            <div className="relative flex flex-col rounded-3xl bg-slate-50 p-8 dark:bg-slate-800/50">
-              <div className="absolute -left-3 -top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
-                3
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-50 p-6 dark:bg-slate-800/50 sm:p-8">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="flex items-center gap-4 sm:w-64 sm:flex-none">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
+                    2
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4a83c6]/10 text-[#4a83c6] dark:bg-[#5fa3ed]/10 dark:text-[#5fa3ed]">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Добавьте токен</h3>
+                </div>
+                <div className="flex-1 text-slate-600 dark:text-slate-400">
+                  <p className="leading-7">
+                    Авторизуйтесь на этом сайте через свой Telegram и вставьте скопированный токен в панель управления. Никаких паролей или сложной регистрации не нужно.
+                  </p>
+                </div>
               </div>
-              <LinkIcon className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Отправьте ссылку</h3>
-              <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Скопируйте вашу персональную ссылку на чат и отправьте маме, бабушке или любому близкому человеку.
-              </p>
             </div>
 
+            <div className="flex justify-center py-1 text-slate-300 dark:text-slate-600">
+              <ArrowRight className="h-8 w-8 rotate-90" />
+            </div>
+
+            <div className="relative overflow-hidden rounded-[2rem] bg-slate-50 p-6 dark:bg-slate-800/50 sm:p-8">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="flex items-center gap-4 sm:w-64 sm:flex-none">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-lg font-bold text-white dark:bg-white dark:text-slate-900">
+                    3
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#4a83c6]/10 text-[#4a83c6] dark:bg-[#5fa3ed]/10 dark:text-[#5fa3ed]">
+                    <LinkIcon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Отправьте ссылку</h3>
+                </div>
+                <div className="flex-1 text-slate-600 dark:text-slate-400">
+                  <p className="leading-7">
+                    Скопируйте вашу персональную ссылку на чат и отправьте маме, бабушке или любому близкому человеку. Они просто откроют страницу и смогут сразу написать вам.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div className="mt-12 flex justify-center">
