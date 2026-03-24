@@ -212,7 +212,7 @@ export default function Home() {
               <Bot className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Создайте бота</h3>
               <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Напишите боту <strong>@BotFather</strong> в Telegram команду <code>/newbot</code>. Придумайте имя и скопируйте полученный Токен.
+                Напишите <strong>@BotFather</strong> в Telegram и отправьте команду <code>/newbot</code>. Сначала укажите имя родственника на русском, например <code>Екатерина Андреевна</code>, затем задайте username на английском с нижними подчеркиваниями, например <code>kate_mama_bot</code> - слово <code>bot</code> в конце обязательно.
               </p>
             </div>
 
