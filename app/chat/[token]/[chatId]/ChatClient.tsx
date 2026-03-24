@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
@@ -495,7 +496,7 @@ export default function ChatClient({
 
   return (
     <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
-      <div className="mx-auto flex h-full max-w-7xl md:px-4 md:py-5">
+      <div className="mx-auto flex h-full max-w-7xl pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:px-4 md:py-5">
         <aside className="hidden w-[340px] shrink-0 overflow-hidden rounded-l-[28px] border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:flex md:flex-col md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
           <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -520,10 +521,10 @@ export default function ChatClient({
                   prefetch
                   scroll={false}
                   onClick={() => markChatAsRead(inviteToken, chat)}
-                  className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] ${
+                  className={`relative overflow-hidden flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
                     isActive
                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
-                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d]'
+                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
                   }`}
                 >
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
@@ -623,9 +624,12 @@ export default function ChatClient({
                                   {!loadedMediaIds[message.id] && (
                                     <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#dbe6ef] to-[#cddbe7] dark:from-[#22303d] dark:to-[#1c2732]" />
                                   )}
-                                  <img
+                                  <Image
                                     src={mediaUrl}
                                     alt="Фото"
+                                    width={1200}
+                                    height={1200}
+                                    unoptimized
                                     onLoad={() => setLoadedMediaIds((current) => ({ ...current, [message.id]: true }))}
                                     className="max-h-[420px] w-full object-cover"
                                   />
@@ -693,7 +697,7 @@ export default function ChatClient({
             </div>
           </main>
 
-          <footer className="shrink-0 border-t border-black/5 bg-white/92 px-3 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5 md:py-4">
+          <footer className="shrink-0 border-t border-black/5 bg-white/92 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5 md:py-4">
             <div className="mx-auto flex max-w-4xl items-end gap-2 md:gap-3">
               <input
                 ref={fileInputRef}

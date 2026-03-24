@@ -106,9 +106,9 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
 
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col md:flex-row md:px-4 md:py-5">
+      <div className="mx-auto flex min-h-screen max-w-7xl flex-col pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:flex-row md:px-4 md:py-5">
         <aside className="w-full shrink-0 border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:max-w-sm md:rounded-[28px] md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
-          <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5">
+          <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5 md:pt-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
@@ -162,7 +162,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                     prefetch
                     scroll={false}
                     onClick={() => markChatAsRead(token, chat)}
-                    className="flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d]"
+                    className="relative overflow-hidden flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] active:bg-[#e6f0f8] hover:bg-[#edf4fa] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(78,164,246,0.18),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 dark:active:bg-[#263543] dark:hover:bg-[#22303d] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-base font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
                       {getInitials(chatName)}
