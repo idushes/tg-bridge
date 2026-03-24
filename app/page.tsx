@@ -108,7 +108,7 @@ export default function Home() {
                 <div className="p-4">
                   <div className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200">
-                      Привет! Как дела? Я просто открыла ссылку и пишу тут! 👋
+                      Привет! Проверяю связь. Тут очень удобно писать.
                     </div>
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function Home() {
                   <div className="flex justify-end mb-3">
                     <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#4a83c6] px-4 py-2.5 text-sm text-white shadow-sm dark:bg-[#3b6ea8]">
                       <span className="text-xs font-semibold opacity-70 block mb-0.5">Мама</span>
-                      Привет! Как дела? Я просто открыла ссылку и пишу тут! 👋
+                      Привет! Проверяю связь. Тут очень удобно писать.
                     </div>
                   </div>
                   <div className="flex justify-start">
