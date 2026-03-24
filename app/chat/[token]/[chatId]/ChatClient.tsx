@@ -10,6 +10,10 @@ import { useLiveChats } from '../useLiveChats';
 
 const ACTIVE_CHAT_HISTORY_KEY = 'tgBridgeActiveChatId';
 
+function getActiveChatStorageKey(inviteToken: string) {
+  return `tgBridgeActiveChat:${inviteToken}`;
+}
+
 interface PendingMessage {
   clientId: string;
   optimisticMessage: Message;
@@ -242,8 +246,14 @@ export default function ChatClient({
 
     if (!Number.isNaN(historyChatId) && liveChats.some((chat) => chat.participantChatId === historyChatId)) {
       setActiveChatId(historyChatId);
+      return;
     }
-  }, [liveChats]);
+
+    const storedChatId = Number(sessionStorage.getItem(getActiveChatStorageKey(inviteToken)));
+    if (!Number.isNaN(storedChatId) && liveChats.some((chat) => chat.participantChatId === storedChatId)) {
+      setActiveChatId(storedChatId);
+    }
+  }, [inviteToken, liveChats]);
 
   useEffect(() => {
     const state = window.history.state && typeof window.history.state === 'object'
@@ -257,7 +267,9 @@ export default function ChatClient({
       },
       ''
     );
-  }, [activeChatId]);
+
+    sessionStorage.setItem(getActiveChatStorageKey(inviteToken), String(activeChatId));
+  }, [activeChatId, inviteToken]);
 
   useEffect(() => {
     setLiveChats(chats);
