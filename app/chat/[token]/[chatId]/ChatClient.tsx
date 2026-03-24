@@ -117,6 +117,36 @@ function formatMessageTime(timestamp: string) {
   });
 }
 
+function renderMessageText(text: string) {
+  const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+  const isUrlPattern = /^(https?:\/\/[^\s]+|www\.[^\s]+)$/i;
+  const parts = text.split(urlPattern);
+
+  return parts.map((part, index) => {
+    if (!part) {
+      return null;
+    }
+
+    if (isUrlPattern.test(part)) {
+      const href = part.startsWith('http') ? part : `https://${part}`;
+
+      return (
+        <a
+          key={`${part}-${index}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-[#1f7dcf] underline decoration-[#1f7dcf]/35 underline-offset-2 transition hover:text-[#1668ac] dark:text-[#7bc2ff] dark:decoration-[#7bc2ff]/40 dark:hover:text-[#9fd4ff]"
+        >
+          {part}
+        </a>
+      );
+    }
+
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
+}
+
 function getChatAvatarUrl(inviteToken: string, chat: ChatMeta) {
   if (!chat.participantPhotoFileId) {
     return null;
@@ -983,7 +1013,7 @@ export default function ChatClient({
 
                           {message.text && (
                             <p className={`whitespace-pre-wrap break-words pr-12 text-[15px] leading-[1.32rem] ${message.mediaType === 'photo' ? 'px-0.5' : ''}`}>
-                              {message.text}
+                              {renderMessageText(message.text)}
                             </p>
                           )}
 
