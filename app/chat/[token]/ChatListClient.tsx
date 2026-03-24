@@ -72,6 +72,7 @@ interface ChatListClientProps {
 export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [search, setSearch] = useState('');
+  const [liveChats, setLiveChats] = useState(chats);
 
   useChatNotifications({ token });
 
@@ -79,13 +80,59 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  useEffect(() => {
+    setLiveChats(chats);
+  }, [chats]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncChats = async () => {
+      try {
+        const response = await fetch(`/api/chats?inviteToken=${token}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data = await response.json() as { chats: ChatMeta[] };
+        if (!cancelled) {
+          setLiveChats(data.chats);
+        }
+      } catch {
+        // ignore sync failures for the list
+      }
+    };
+
+    void syncChats();
+    const interval = window.setInterval(() => {
+      void syncChats();
+    }, 5000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncChats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [token]);
+
   const filteredChats = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) {
-      return chats;
+      return liveChats;
     }
 
-    return chats.filter((chat) => {
+    return liveChats.filter((chat) => {
       const haystack = [
         chat.participantFirstName,
         chat.participantLastName,
@@ -99,7 +146,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
 
       return haystack.includes(query);
     });
-  }, [chats, search]);
+  }, [liveChats, search]);
 
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">

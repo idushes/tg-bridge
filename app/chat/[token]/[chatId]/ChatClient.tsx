@@ -81,6 +81,14 @@ function formatMessageTime(timestamp: string) {
   });
 }
 
+function getMessageStatus(message: Message) {
+  if (message.id.startsWith('local-')) {
+    return '⌛';
+  }
+
+  return '✓✓';
+}
+
 function formatDayLabel(timestamp: string) {
   return new Date(timestamp).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -117,6 +125,7 @@ export default function ChatClient({
   chats,
 }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [liveChats, setLiveChats] = useState(chats);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -133,8 +142,8 @@ export default function ChatClient({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const activeChat = useMemo(
-    () => chats.find((chat) => chat.participantChatId === chatId) ?? null,
-    [chatId, chats]
+    () => liveChats.find((chat) => chat.participantChatId === chatId) ?? null,
+    [chatId, liveChats]
   );
 
   const visibleMessages = useMemo(() => {
@@ -169,6 +178,52 @@ export default function ChatClient({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    setLiveChats(chats);
+  }, [chats]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncChats = async () => {
+      try {
+        const response = await fetch(`/api/chats?inviteToken=${inviteToken}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data = await response.json() as { chats: ChatMeta[] };
+        if (!cancelled) {
+          setLiveChats(data.chats);
+        }
+      } catch {
+        // ignore sidebar sync failures
+      }
+    };
+
+    void syncChats();
+    const interval = window.setInterval(() => {
+      void syncChats();
+    }, 5000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void syncChats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [inviteToken]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -445,7 +500,7 @@ export default function ChatClient({
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-2">
-            {chats.map((chat) => {
+            {liveChats.map((chat) => {
               const chatName = getChatName(chat);
               const isActive = chat.participantChatId === chatId;
 
@@ -556,7 +611,7 @@ export default function ChatClient({
                                   />
                                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
                                   <div className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
-                                    {hydrated ? formatMessageTime(message.timestamp) : ''}
+                                    {hydrated ? formatMessageTime(message.timestamp) : ''} {isUser ? getMessageStatus(message) : ''}
                                   </div>
                                 </div>
                               )}
@@ -591,7 +646,7 @@ export default function ChatClient({
                               isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
                             }`}>
                               <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
-                              {message.id.startsWith('local-') && <span className="text-[10px]">⌛</span>}
+                              {isUser && <span className="text-[10px]">{getMessageStatus(message)}</span>}
                             </div>
                           )}
                         </div>
