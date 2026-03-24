@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
 import { getUnreadCount, markChatAsRead } from '../chatReadState';
+import { useInstallPrompt } from '../useInstallPrompt';
 import { useChatNotifications } from '../useChatNotifications';
 import { useLiveChats } from '../useLiveChats';
 
@@ -195,6 +196,7 @@ export default function ChatClient({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { canInstall, promptInstall } = useInstallPrompt();
 
   const activeChat = useMemo(
     () => liveChats.find((chat) => chat.participantChatId === activeChatId) ?? null,
@@ -631,6 +633,16 @@ export default function ChatClient({
               <span className="truncate">{copiedBotLink ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
               <span className="ml-3 shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
             </button>
+            {canInstall && (
+              <button
+                type="button"
+                onClick={() => void promptInstall()}
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#37AEE2] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f9dd0]"
+              >
+                <span>Установить как приложение</span>
+                <span className="ml-3 shrink-0">＋</span>
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-2">
