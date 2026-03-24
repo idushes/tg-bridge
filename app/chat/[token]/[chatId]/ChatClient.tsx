@@ -153,6 +153,7 @@ export default function ChatClient({
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [hydrated, setHydrated] = useState(false);
   const [loadedMediaIds, setLoadedMediaIds] = useState<Record<string, boolean>>({});
+  const [expandedPhoto, setExpandedPhoto] = useState<{ src: string; alt: string } | null>(null);
   const [freshMessageIds, setFreshMessageIds] = useState<string[]>([]);
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
   const previousMessageCountRef = useRef(initialMessages.length);
@@ -201,6 +202,26 @@ export default function ChatClient({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!expandedPhoto) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedPhoto(null);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expandedPhoto]);
 
   useEffect(() => {
     if (activeChat) {
@@ -620,7 +641,11 @@ export default function ChatClient({
                           {message.mediaType && mediaUrl && (
                             <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[16px] bg-black/5 dark:bg-black/20`}>
                               {message.mediaType === 'photo' && (
-                                <div className="relative min-w-[220px]">
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedPhoto({ src: mediaUrl, alt: 'Фото' })}
+                                  className="relative block min-w-[180px] max-w-[280px] cursor-zoom-in overflow-hidden rounded-[16px] text-left outline-none transition hover:scale-[1.01]"
+                                >
                                   {!loadedMediaIds[message.id] && (
                                     <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#dbe6ef] to-[#cddbe7] dark:from-[#22303d] dark:to-[#1c2732]" />
                                   )}
@@ -631,14 +656,14 @@ export default function ChatClient({
                                     height={1200}
                                     unoptimized
                                     onLoad={() => setLoadedMediaIds((current) => ({ ...current, [message.id]: true }))}
-                                    className="max-h-[420px] w-full object-cover"
+                                    className="max-h-[260px] w-full object-cover md:max-h-[320px]"
                                   />
                                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
                                   <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
                                     <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
                                     {isUser && <MessageStatusIcon status={getMessageStatus(message)} compact />}
                                   </div>
-                                </div>
+                                </button>
                               )}
                               {message.mediaType === 'video' && (
                                 <video src={mediaUrl} controls className="max-h-[420px] w-full" />
@@ -750,6 +775,34 @@ export default function ChatClient({
           }
         }
       `}</style>
+      {expandedPhoto && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setExpandedPhoto(null)}
+        >
+          <button
+            type="button"
+            aria-label="Закрыть просмотр фото"
+            className="absolute right-4 top-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl text-white transition hover:bg-white/20"
+            onClick={() => setExpandedPhoto(null)}
+          >
+            ×
+          </button>
+          <div
+            className="relative max-h-[90vh] max-w-[92vw] overflow-hidden rounded-[22px] bg-black/20 shadow-[0_20px_80px_rgba(0,0,0,0.45)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              src={expandedPhoto.src}
+              alt={expandedPhoto.alt}
+              width={1800}
+              height={1800}
+              unoptimized
+              className="max-h-[90vh] w-auto max-w-[92vw] object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
