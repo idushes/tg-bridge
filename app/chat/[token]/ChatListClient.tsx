@@ -106,8 +106,8 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
 
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:flex-row md:px-4 md:py-5">
-        <aside className="w-full shrink-0 border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:max-w-sm md:rounded-[28px] md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+      <div className="flex min-h-screen flex-col pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:flex-row">
+        <aside className="w-full shrink-0 border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:max-w-[27rem]">
           <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5 md:pt-5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
@@ -140,9 +140,9 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
             </label>
           </div>
 
-          <div className="px-2 py-2 md:h-[calc(100vh-3rem-134px)] md:overflow-y-auto">
+          <div className="px-2 py-2 md:h-[calc(100vh-134px)] md:overflow-y-auto">
             {filteredChats.length === 0 ? (
-              <div className="flex min-h-72 flex-col items-center justify-center rounded-[24px] border border-dashed border-[#d7e2ed] px-8 text-center dark:border-[#2a3947]">
+              <div className="flex min-h-72 flex-col items-center justify-center border border-dashed border-[#d7e2ed] px-8 text-center dark:border-[#2a3947] md:m-4 md:rounded-[24px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eff5fb] text-2xl text-[#5f7c97] dark:bg-[#22303d] dark:text-[#88a9c7]">
                   ✈️
                 </div>

@@ -570,8 +570,8 @@ export default function ChatClient({
 
   return (
     <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
-      <div className="mx-auto flex h-full max-w-7xl pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:px-4 md:py-5">
-        <aside className="hidden w-[340px] shrink-0 overflow-hidden rounded-l-[28px] border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:flex md:flex-col md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+      <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
+        <aside className="hidden w-[340px] shrink-0 overflow-hidden border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:flex md:flex-col">
           <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
@@ -633,9 +633,9 @@ export default function ChatClient({
           </div>
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5eef5] dark:bg-[#101b27] md:rounded-r-[28px] md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5eef5] dark:bg-[#101b27]">
           <header className="shrink-0 border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5">
-            <div className="mx-auto flex max-w-5xl items-center gap-3">
+            <div className="flex items-center gap-3">
               <Link
                 href={`/chat/${inviteToken}`}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
@@ -667,7 +667,7 @@ export default function ChatClient({
             ref={viewportRef}
             className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.30),rgba(255,255,255,0.08)),radial-gradient(circle_at_top,rgba(255,255,255,0.7),transparent_40%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23b4c7d8%22 fill-opacity=%220.16%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(14,22,33,0.42),rgba(14,22,33,0.76)),radial-gradient(circle_at_top,rgba(55,74,96,0.24),transparent_38%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23354b61%22 fill-opacity=%220.26%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
           >
-            <div className="mx-auto max-w-4xl space-y-4">
+            <div className="mx-auto w-full max-w-5xl space-y-4">
               {groupedMessages.map((group) => (
                 <div key={group.label} className="space-y-3">
                   <div className="sticky top-2 z-10 flex justify-center">
@@ -777,7 +777,7 @@ export default function ChatClient({
           </main>
 
           <footer className="shrink-0 border-t border-black/5 bg-white/92 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5 md:py-4">
-            <div className="mx-auto flex max-w-4xl items-end gap-2 md:gap-3">
+            <div className="flex items-end gap-2 md:gap-3">
               <input
                 ref={fileInputRef}
                 type="file"
