@@ -635,8 +635,9 @@ export default function ChatClient({
               </div>
               <div className="relative flex items-center gap-2">
                 {copiedBotLink && (
-                  <div className="pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#233547] px-3 py-1 text-[11px] font-medium text-white shadow-[0_10px_24px_rgba(35,53,71,0.2)] dark:bg-[#f4f7fb] dark:text-[#17212b]">
-                    Ссылка скопирована
+                  <div className="pointer-events-none absolute left-12 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 text-[11px] font-medium text-[#496783] shadow-[0_10px_24px_rgba(76,143,202,0.18)] backdrop-blur dark:border-white/10 dark:bg-[#22303d]/96 dark:text-[#b7cee4]">
+                    <span className="text-[10px] text-[#419fd9] dark:text-[#72bbff]">✓</span>
+                    <span className="whitespace-nowrap">Скопировано</span>
                   </div>
                 )}
                 <button
