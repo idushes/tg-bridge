@@ -144,8 +144,7 @@ function MessageStatusIcon({ status, compact = false }: { status: 'pending' | 's
 
   return (
     <svg viewBox="0 0 16 16" className={`${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} opacity-95`} aria-hidden="true">
-      <path d="M2.6 8.5 5.2 11l3.1-4.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
-      <path d="M7.4 8.5 10 11l3.4-4.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+      <path d="M3.2 8.4 6.3 11.1l6-6.9" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
     </svg>
   );
 }
