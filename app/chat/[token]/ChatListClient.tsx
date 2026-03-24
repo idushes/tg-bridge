@@ -107,9 +107,9 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
 
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">
-      <div className="flex min-h-screen flex-col pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)] md:flex-row">
-        <aside className="w-full shrink-0 border-r border-[#d7e2ec] bg-[#f7fbff] dark:border-[#1e2b38] dark:bg-[#17212b] md:max-w-[26rem]">
-          <div className="border-b border-[#d7e2ec] px-4 pb-4 pt-5 dark:border-[#1e2b38] md:pt-5">
+      <div className="min-h-screen pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
+        <aside className="min-h-screen w-full bg-[#f7fbff] dark:bg-[#17212b]">
+          <div className="border-b border-[#d7e2ec] px-4 pb-4 pt-5 dark:border-[#1e2b38] md:px-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
@@ -151,9 +151,9 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
             </a>
           </div>
 
-          <div className="px-2 py-2 md:h-[calc(100vh-134px)] md:overflow-y-auto">
+          <div className="px-2 py-2 md:px-3 md:py-3">
             {filteredChats.length === 0 ? (
-              <div className="flex min-h-72 flex-col items-center justify-center border border-dashed border-[#d7e2ed] px-8 text-center dark:border-[#2a3947] md:m-4 md:rounded-[24px]">
+              <div className="flex min-h-[calc(100vh-180px)] flex-col items-center justify-center border border-dashed border-[#d7e2ed] px-8 text-center dark:border-[#2a3947] md:rounded-[24px]">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eff5fb] text-2xl text-[#5f7c97] dark:bg-[#22303d] dark:text-[#88a9c7]">
                   ✈️
                 </div>
@@ -200,18 +200,6 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
             )}
           </div>
         </aside>
-
-        <section className="hidden flex-1 items-center justify-center bg-[#e9f0f6] px-8 dark:bg-[#0f1720] md:flex">
-          <div className="max-w-md text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-[28px] bg-white text-4xl shadow-[0_8px_30px_rgba(15,23,42,0.08)] dark:bg-[#17212b]">
-              💬
-            </div>
-            <h2 className="text-3xl font-semibold tracking-tight text-[#1f3143] dark:text-[#eef5fb]">Выберите диалог</h2>
-            <p className="mt-4 text-[15px] leading-7 text-[#698096] dark:text-[#8fa7bc]">
-              Интерфейс адаптирован под Telegram: список чатов слева, разговор справа. На телефоне экран списка и сам чат работают как в мобильном приложении.
-            </p>
-          </div>
-        </section>
       </div>
     </div>
   );
