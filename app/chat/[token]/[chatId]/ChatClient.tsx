@@ -230,7 +230,7 @@ function VideoNotePlayer({ src }: { src: string }) {
         <button
           type="button"
           onClick={togglePlayback}
-          className={`absolute inset-0 flex items-center justify-center rounded-full transition ${isPlaying ? 'bg-black/0 hover:bg-black/10' : 'bg-black/18 hover:bg-black/28'}`}
+          className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full transition hover:scale-[1.03]"
           aria-label={isPlaying ? 'Пауза' : 'Воспроизвести кружочек'}
         >
           <span className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/35 bg-black/45 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur transition ${isPlaying ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
@@ -921,7 +921,7 @@ export default function ChatClient({
                           }`}
                         >
                           {message.mediaType && mediaUrl && (
-                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[14px] bg-black/5 dark:bg-black/20`}>
+                            <div className={`${message.text ? 'mb-2' : ''} ${message.mediaType === 'voice' || message.mediaType === 'video_note' ? '' : 'overflow-hidden rounded-[14px] bg-black/5 dark:bg-black/20'}`}>
                               {message.mediaType === 'photo' && (
                                 <button
                                   type="button"
