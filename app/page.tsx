@@ -246,7 +246,16 @@ export default function Home() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Как правильно создать бота в @BotFather</h3>
                 <p className="mt-3 leading-7 text-slate-600 dark:text-slate-400">
-                  Напишите <strong>@BotFather</strong> и отправьте команду <code>/newbot</code>.
+                  Напишите{' '}
+                  <a
+                    href="https://t.me/BotFather"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-[#3b6ea8] underline decoration-[#3b6ea8]/30 underline-offset-4 transition hover:decoration-[#3b6ea8] dark:text-[#8cbbf0] dark:decoration-[#8cbbf0]/40"
+                  >
+                    @BotFather
+                  </a>{' '}
+                  и отправьте команду <code>/newbot</code>.
                 </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl bg-white/80 p-4 ring-1 ring-slate-900/5 dark:bg-slate-900/40 dark:ring-white/10">
