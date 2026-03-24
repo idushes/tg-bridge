@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 import { getBotInfo, setWebhook } from '@/lib/telegram';
 import { saveBotConfig, getBotConfig, listUserBots } from '@/lib/blob';
+import { generateInviteToken } from '@/lib/inviteToken';
 import type { BotConfig } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to set webhook' }, { status: 500 });
     }
 
-    const inviteToken = uuidv4();
+    const inviteToken = await generateInviteToken();
     
     const config: BotConfig = {
       botToken,

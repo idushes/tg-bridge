@@ -37,9 +37,15 @@ export function initDb() {
           bot_username text not null,
           bot_name text not null,
           owner_telegram_id bigint not null,
-          invite_token uuid not null unique,
+          invite_token text not null unique,
           created_at timestamptz not null default now()
         )
+      `;
+
+      await sql`
+        alter table bots
+        alter column invite_token type text
+        using invite_token::text
       `;
 
       await sql`create index if not exists bots_owner_idx on bots (owner_telegram_id)`;

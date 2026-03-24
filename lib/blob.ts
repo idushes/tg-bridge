@@ -159,7 +159,7 @@ export async function saveBotConfig(botId: number, config: BotConfig): Promise<v
       ${config.botUsername},
       ${config.botName},
       ${config.ownerTelegramId},
-      ${config.inviteToken}::uuid,
+      ${config.inviteToken},
       ${config.createdAt}
     )
     on conflict (bot_id) do update set
@@ -260,7 +260,7 @@ export async function getChatByInviteToken(inviteToken: string): Promise<{ botId
   const rows = await sql<BotRow[]>`
     select *
     from bots
-    where invite_token = ${inviteToken}::uuid
+    where invite_token = ${inviteToken}
     limit 1
   `;
 
