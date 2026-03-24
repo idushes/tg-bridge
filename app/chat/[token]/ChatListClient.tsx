@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
 import { useChatNotifications } from './useChatNotifications';
+import { useLiveChats } from './useLiveChats';
 
 function getInitialDarkMode() {
   if (typeof window === 'undefined') {
@@ -72,59 +73,13 @@ interface ChatListClientProps {
 export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [search, setSearch] = useState('');
-  const [liveChats, setLiveChats] = useState(chats);
+  const { liveChats } = useLiveChats({ token, initialChats: chats });
 
   useChatNotifications({ token });
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
-
-  useEffect(() => {
-    setLiveChats(chats);
-  }, [chats]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const syncChats = async () => {
-      try {
-        const response = await fetch(`/api/chats?inviteToken=${token}&t=${Date.now()}`, {
-          cache: 'no-store',
-        });
-
-        if (!response.ok || cancelled) {
-          return;
-        }
-
-        const data = await response.json() as { chats: ChatMeta[] };
-        if (!cancelled) {
-          setLiveChats(data.chats);
-        }
-      } catch {
-        // ignore sync failures for the list
-      }
-    };
-
-    void syncChats();
-    const interval = window.setInterval(() => {
-      void syncChats();
-    }, 5000);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void syncChats();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [token]);
 
   const filteredChats = useMemo(() => {
     const query = search.trim().toLowerCase();

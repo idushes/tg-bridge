@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
 import { useChatNotifications } from '../useChatNotifications';
+import { useLiveChats } from '../useLiveChats';
 
 interface PendingMessage {
   clientId: string;
@@ -83,10 +84,28 @@ function formatMessageTime(timestamp: string) {
 
 function getMessageStatus(message: Message) {
   if (message.id.startsWith('local-')) {
-    return '⌛';
+    return 'pending';
   }
 
-  return '✓✓';
+  return 'sent';
+}
+
+function MessageStatusIcon({ status, compact = false }: { status: 'pending' | 'sent'; compact?: boolean }) {
+  if (status === 'pending') {
+    return (
+      <svg viewBox="0 0 16 16" className={`${compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} opacity-90`} aria-hidden="true">
+        <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M8 4.5v3.8l2.4 1.45" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 16 16" className={`${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} opacity-95`} aria-hidden="true">
+      <path d="M2.6 8.5 5.2 11l3.1-4.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+      <path d="M7.4 8.5 10 11l3.4-4.8" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+    </svg>
+  );
 }
 
 function formatDayLabel(timestamp: string) {
@@ -125,16 +144,18 @@ export default function ChatClient({
   chats,
 }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [liveChats, setLiveChats] = useState(chats);
+  const { liveChats, setLiveChats } = useLiveChats({ token: inviteToken, initialChats: chats });
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [hydrated, setHydrated] = useState(false);
   const [loadedMediaIds, setLoadedMediaIds] = useState<Record<string, boolean>>({});
+  const [freshMessageIds, setFreshMessageIds] = useState<string[]>([]);
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
   const previousMessageCountRef = useRef(initialMessages.length);
   const latestSeqRef = useRef(getMaxSeq(initialMessages));
+  const messageIdsRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
   const reconnectTimeoutRef = useRef<number | null>(null);
   const viewportRef = useRef<HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -181,49 +202,7 @@ export default function ChatClient({
 
   useEffect(() => {
     setLiveChats(chats);
-  }, [chats]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const syncChats = async () => {
-      try {
-        const response = await fetch(`/api/chats?inviteToken=${inviteToken}&t=${Date.now()}`, {
-          cache: 'no-store',
-        });
-
-        if (!response.ok || cancelled) {
-          return;
-        }
-
-        const data = await response.json() as { chats: ChatMeta[] };
-        if (!cancelled) {
-          setLiveChats(data.chats);
-        }
-      } catch {
-        // ignore sidebar sync failures
-      }
-    };
-
-    void syncChats();
-    const interval = window.setInterval(() => {
-      void syncChats();
-    }, 5000);
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void syncChats();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [inviteToken]);
+  }, [chats, setLiveChats]);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -247,8 +226,16 @@ export default function ChatClient({
       }
 
       const data = await response.json();
+      const previousIds = messageIdsRef.current;
       setMessages(data.messages);
+      messageIdsRef.current = new Set(data.messages.map((message: Message) => message.id));
       latestSeqRef.current = getMaxSeq(data.messages);
+      setFreshMessageIds((current) => {
+        const nextFreshIds = data.messages
+          .filter((message: Message) => !previousIds.has(message.id))
+          .map((message: Message) => message.id);
+        return nextFreshIds.length > 0 ? [...current, ...nextFreshIds] : current;
+      });
       setPendingMessages((current) => {
         const serverIds = new Set<string>(data.messages.map((message: Message) => message.id));
         return current.filter((pending) => {
@@ -263,6 +250,18 @@ export default function ChatClient({
       console.error('Error syncing messages:', error);
     }
   }, [botId, chatId, inviteToken]);
+
+  useEffect(() => {
+    if (freshMessageIds.length === 0) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setFreshMessageIds([]);
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [freshMessageIds]);
 
   useEffect(() => {
     void syncMessages();
@@ -288,6 +287,8 @@ export default function ChatClient({
         const nextMessage = JSON.parse(event.data) as Message;
         latestSeqRef.current = Math.max(latestSeqRef.current, nextMessage.seq ?? 0);
         setMessages((current) => upsertMessage(current, nextMessage));
+        messageIdsRef.current = new Set([...messageIdsRef.current, nextMessage.id]);
+        setFreshMessageIds((current) => [...current, nextMessage.id]);
       }) as EventListener);
 
       source.onerror = () => {
@@ -424,6 +425,7 @@ export default function ChatClient({
       }));
 
       setMessages((current) => upsertMessage(current, data.message));
+      messageIdsRef.current = new Set([...messageIdsRef.current, data.message.id]);
       latestSeqRef.current = Math.max(latestSeqRef.current, data.message.seq ?? 0);
     } catch (error) {
       setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
@@ -588,7 +590,10 @@ export default function ChatClient({
                     const isUser = message.from === 'user';
 
                     return (
-                      <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        key={message.id}
+                        className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${freshMessageIds.includes(message.id) ? 'animate-[message-pop_220ms_ease-out]' : ''}`}
+                      >
                         <div
                           className={`max-w-[82%] rounded-[20px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
                             isUser
@@ -610,8 +615,9 @@ export default function ChatClient({
                                     className="max-h-[420px] w-full object-cover"
                                   />
                                   <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent" />
-                                  <div className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
-                                    {hydrated ? formatMessageTime(message.timestamp) : ''} {isUser ? getMessageStatus(message) : ''}
+                                  <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/35 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
+                                    <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
+                                    {isUser && <MessageStatusIcon status={getMessageStatus(message)} compact />}
                                   </div>
                                 </div>
                               )}
@@ -646,7 +652,7 @@ export default function ChatClient({
                               isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
                             }`}>
                               <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
-                              {isUser && <span className="text-[10px]">{getMessageStatus(message)}</span>}
+                              {isUser && <MessageStatusIcon status={getMessageStatus(message)} />}
                             </div>
                           )}
                         </div>
@@ -700,6 +706,18 @@ export default function ChatClient({
           </footer>
         </section>
       </div>
+      <style jsx>{`
+        @keyframes message-pop {
+          0% {
+            opacity: 0;
+            transform: translateY(10px) scale(0.985);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
