@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Telegram Bridge - Общение с близкими через Telegram",
+  title: "Telegram Bridge",
   description: "Обходите блокировки и общайтесь с близкими через Telegram без ограничений",
   manifest: "/manifest.webmanifest",
   applicationName: "Telegram Bridge",
