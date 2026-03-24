@@ -8,6 +8,8 @@ import { getUnreadCount, markChatAsRead } from '../chatReadState';
 import { useChatNotifications } from '../useChatNotifications';
 import { useLiveChats } from '../useLiveChats';
 
+const ACTIVE_CHAT_HISTORY_KEY = 'tgBridgeActiveChatId';
+
 interface PendingMessage {
   clientId: string;
   optimisticMessage: Message;
@@ -233,6 +235,29 @@ export default function ChatClient({
   useEffect(() => {
     setActiveChatId(chatId);
   }, [chatId]);
+
+  useEffect(() => {
+    const state = window.history.state as Record<string, unknown> | null;
+    const historyChatId = Number(state?.[ACTIVE_CHAT_HISTORY_KEY]);
+
+    if (!Number.isNaN(historyChatId) && liveChats.some((chat) => chat.participantChatId === historyChatId)) {
+      setActiveChatId(historyChatId);
+    }
+  }, [liveChats]);
+
+  useEffect(() => {
+    const state = window.history.state && typeof window.history.state === 'object'
+      ? window.history.state as Record<string, unknown>
+      : {};
+
+    window.history.replaceState(
+      {
+        ...state,
+        [ACTIVE_CHAT_HISTORY_KEY]: activeChatId,
+      },
+      ''
+    );
+  }, [activeChatId]);
 
   useEffect(() => {
     setLiveChats(chats);
