@@ -628,10 +628,10 @@ export default function ChatClient({
             <button
               type="button"
               onClick={copyBotLink}
-              className="flex items-center justify-between rounded-xl bg-[#f2e9de] px-3.5 py-3 text-sm text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847] xl:px-4"
+              className="inline-flex max-w-full items-center gap-2 rounded-xl bg-[#f2e9de] px-3 py-2 text-[13px] font-medium text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
             >
-              <span className="truncate">{copiedBotLink ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
-              <span className="ml-3 shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
+              <span className="truncate">{copiedBotLink ? 'Ссылка скопирована' : `Скопировать @${botUsername}`}</span>
+              <span className="shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
             </button>
             {canInstall && (
               <button
