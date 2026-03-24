@@ -156,10 +156,11 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
             <button
               type="button"
               onClick={copyBotLink}
-              className="mt-3 inline-flex max-w-full items-center gap-2 rounded-xl bg-[#f2e9de] px-3 py-2 text-[13px] font-medium text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+              className="mt-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f2e9de] text-[15px] text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+              aria-label={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
+              title={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
             >
-              <span className="truncate">{copied ? 'Ссылка скопирована' : `Скопировать @${botUsername}`}</span>
-              <span className="shrink-0">{copied ? '✓' : '⧉'}</span>
+              <span className="shrink-0 leading-none">{copied ? '✓' : '⧉'}</span>
             </button>
 
             {canInstall && (
