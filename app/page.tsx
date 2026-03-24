@@ -246,8 +246,22 @@ export default function Home() {
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Как правильно создать бота в @BotFather</h3>
                 <p className="mt-3 leading-7 text-slate-600 dark:text-slate-400">
-                  Сначала укажите имя родственника на русском, например <code>Екатерина Андреевна</code>. Затем задайте username на английском с нижними подчеркиваниями, например <code>kate_mama_bot</code>. Слово <code>bot</code> в конце обязательно.
+                  Напишите <strong>@BotFather</strong> и отправьте команду <code>/newbot</code>.
                 </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-white/80 p-4 ring-1 ring-slate-900/5 dark:bg-slate-900/40 dark:ring-white/10">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Имя бота</div>
+                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                      Любое понятное имя, например <code>Екатерина Андреевна</code>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl bg-white/80 p-4 ring-1 ring-slate-900/5 dark:bg-slate-900/40 dark:ring-white/10">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Username бота</div>
+                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                      Только на английском, например <code>kate_mama_bot</code>. Слово <code>bot</code> в конце обязательно.
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
