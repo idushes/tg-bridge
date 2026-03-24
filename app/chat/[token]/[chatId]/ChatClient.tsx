@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Message } from '@/lib/types';
+import type { ChatMeta, Message } from '@/lib/types';
 import { useChatNotifications } from '../useChatNotifications';
 
 interface PendingMessage {
@@ -38,15 +38,68 @@ function getInitialDarkMode() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
+function getChatName(chat: ChatMeta) {
+  return chat.participantFirstName || chat.participantUsername || `Чат ${chat.participantChatId}`;
+}
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'TG';
+}
+
+function formatSidebarTime(timestamp: string) {
+  return new Date(timestamp).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatMessageTime(timestamp: string) {
+  return new Date(timestamp).toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatDayLabel(timestamp: string) {
+  return new Date(timestamp).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
+function sameDay(left: string, right: string) {
+  const leftDate = new Date(left);
+  const rightDate = new Date(right);
+
+  return (
+    leftDate.getFullYear() === rightDate.getFullYear() &&
+    leftDate.getMonth() === rightDate.getMonth() &&
+    leftDate.getDate() === rightDate.getDate()
+  );
+}
+
 interface ChatClientProps {
   inviteToken: string;
   botId: number;
   chatId: number;
   initialMessages: Message[];
   partnerName: string;
+  chats: ChatMeta[];
 }
 
-export default function ChatClient({ inviteToken, botId, chatId, initialMessages, partnerName }: ChatClientProps) {
+export default function ChatClient({
+  inviteToken,
+  botId,
+  chatId,
+  initialMessages,
+  partnerName,
+  chats,
+}: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -62,10 +115,10 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const formatTime = (timestamp: string) => new Date(timestamp).toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const activeChat = useMemo(
+    () => chats.find((chat) => chat.participantChatId === chatId) ?? null,
+    [chatId, chats]
+  );
 
   const visibleMessages = useMemo(() => {
     const merged = [...messages];
@@ -106,23 +159,26 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
         `/api/chats/${chatId}/messages?inviteToken=${inviteToken}&botId=${botId}&t=${Date.now()}`,
         { cache: 'no-store' }
       );
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages);
-        latestSeqRef.current = getMaxSeq(data.messages);
-        setPendingMessages((current) => {
-          const serverIds = new Set<string>(data.messages.map((message: Message) => message.id));
-          return current.filter((pending) => {
-            const resolved = !!pending.serverMessage && serverIds.has(pending.serverMessage.id);
-            if (resolved) {
-              revokePreviewUrl(pending.optimisticMessage);
-            }
-            return !resolved;
-          });
-        });
+
+      if (!response.ok) {
+        return;
       }
+
+      const data = await response.json();
+      setMessages(data.messages);
+      latestSeqRef.current = getMaxSeq(data.messages);
+      setPendingMessages((current) => {
+        const serverIds = new Set<string>(data.messages.map((message: Message) => message.id));
+        return current.filter((pending) => {
+          const resolved = !!pending.serverMessage && serverIds.has(pending.serverMessage.id);
+          if (resolved) {
+            revokePreviewUrl(pending.optimisticMessage);
+          }
+          return !resolved;
+        });
+      });
     } catch (error) {
-      console.error('Error polling messages:', error);
+      console.error('Error syncing messages:', error);
     }
   }, [botId, chatId, inviteToken]);
 
@@ -196,7 +252,7 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
     }
 
     previousMessageCountRef.current = visibleMessages.length;
-  }, [visibleMessages, shouldStickToBottom]);
+  }, [shouldStickToBottom, visibleMessages]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -217,7 +273,9 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
 
   const sendPayload = async (file?: File) => {
     const text = newMessage.trim();
-    if ((!text && !file) || sending) return;
+    if ((!text && !file) || sending) {
+      return;
+    }
 
     const clientId = `local-${Date.now()}`;
     const optimisticMessage: Message = {
@@ -229,13 +287,13 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
       mediaUrl: file ? URL.createObjectURL(file) : undefined,
     };
 
-    setPendingMessages((current) => ([
+    setPendingMessages((current) => [
       ...current,
       {
         clientId,
         optimisticMessage,
       },
-    ]));
+    ]);
     setShouldStickToBottom(true);
     setNewMessage('');
     setSending(true);
@@ -260,31 +318,31 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
             }
       );
 
-      if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
 
-        setPendingMessages((current) => current.map((pending) => {
-          if (pending.clientId !== clientId) {
-            return pending;
-          }
-
-          return {
-            ...pending,
-            serverMessage: {
-              ...data.message,
-              mediaUrl: pending.optimisticMessage.mediaUrl,
-            },
-          };
-        }));
-
-        setMessages((current) => upsertMessage(current, data.message));
-        latestSeqRef.current = Math.max(latestSeqRef.current, data.message.seq ?? 0);
-      } else {
-        const data = await response.json();
+      if (!response.ok) {
         setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
         revokePreviewUrl(optimisticMessage);
         alert(data.error || 'Ошибка отправки');
+        return;
       }
+
+      setPendingMessages((current) => current.map((pending) => {
+        if (pending.clientId !== clientId) {
+          return pending;
+        }
+
+        return {
+          ...pending,
+          serverMessage: {
+            ...data.message,
+            mediaUrl: pending.optimisticMessage.mediaUrl,
+          },
+        };
+      }));
+
+      setMessages((current) => upsertMessage(current, data.message));
+      latestSeqRef.current = Math.max(latestSeqRef.current, data.message.seq ?? 0);
     } catch (error) {
       setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
       revokePreviewUrl(optimisticMessage);
@@ -295,160 +353,268 @@ export default function ChatClient({ inviteToken, botId, chatId, initialMessages
     }
   };
 
-  const sendMessage = async () => {
-    await sendPayload();
-  };
-
   const handlePhotoSelection = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
-
     if (!file) {
       return;
     }
-
     await sendPayload(file);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void sendPayload();
     }
   };
 
   const getMediaUrl = (message: Message) => {
-    if (message.mediaUrl) return message.mediaUrl;
-    if (!message.mediaFileId) return null;
+    if (message.mediaUrl) {
+      return message.mediaUrl;
+    }
+    if (!message.mediaFileId) {
+      return null;
+    }
     return `/api/media/${message.id}?inviteToken=${inviteToken}&botId=${botId}&chatId=${chatId}`;
   };
 
-  return (
-    <div className="h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-900 flex flex-col">
-      <header className="shrink-0 bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <a href={`/chat/${inviteToken}`} className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
-              ←
-            </a>
-            <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">{partnerName}</h1>
-          </div>
-          <button
-            onClick={() => {
-              const newMode = !darkMode;
-              setDarkMode(newMode);
-              localStorage.setItem('darkMode', String(newMode));
-            }}
-            className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors text-sm"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
-        </div>
-      </header>
+  const groupedMessages = useMemo(() => {
+    const groups: Array<{ label: string; messages: Message[] }> = [];
 
-      <main ref={viewportRef} className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="max-w-2xl mx-auto space-y-3">
-          {visibleMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[65%] rounded-2xl px-3 py-2 ${
-                  message.from === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white'
-                }`}
+    for (const message of visibleMessages) {
+      const label = formatDayLabel(message.timestamp);
+      const lastGroup = groups[groups.length - 1];
+
+      if (!lastGroup || !sameDay(lastGroup.messages[0].timestamp, message.timestamp)) {
+        groups.push({ label, messages: [message] });
+        continue;
+      }
+
+      lastGroup.messages.push(message);
+    }
+
+    return groups;
+  }, [visibleMessages]);
+
+  const currentTitle = activeChat ? getChatName(activeChat) : partnerName;
+  const currentSubtitle = activeChat?.participantUsername
+    ? `был(а) недавно · @${activeChat.participantUsername}`
+    : 'Сообщения доставляются через Telegram';
+
+  return (
+    <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
+      <div className="mx-auto flex h-full max-w-7xl md:px-4 md:py-5">
+        <aside className="hidden w-[340px] shrink-0 overflow-hidden rounded-l-[28px] border-r border-black/5 bg-white/90 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/95 md:flex md:flex-col md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+          <div className="border-b border-black/5 px-4 pb-4 pt-5 dark:border-white/5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f91a4] dark:text-[#6c8299]">
+                  Telegram Bridge
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-[#182533] dark:text-[#f5f7fb]">Чаты</h1>
+              </div>
+              <button
+                onClick={() => {
+                  const newMode = !darkMode;
+                  setDarkMode(newMode);
+                  localStorage.setItem('darkMode', String(newMode));
+                }}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
+                aria-label="Переключить тему"
               >
-                {message.text && <p className="whitespace-pre-wrap text-[15px] leading-5">{message.text}</p>}
-                
-                {message.mediaType && getMediaUrl(message) && (
-                  <div className="mt-1.5">
-                    {message.mediaType === 'photo' && getMediaUrl(message) && (
-                      <img
-                        src={getMediaUrl(message) || ''}
-                        alt="Photo"
-                        className="rounded-lg max-w-full max-h-80 object-cover"
-                      />
-                    )}
-                    {message.mediaType === 'video' && (
-                      <video
-                        src={getMediaUrl(message) || ''}
-                        controls
-                        className="rounded-lg max-w-full max-h-80"
-                      />
-                    )}
-                    {message.mediaType === 'voice' && (
-                      <audio
-                        src={getMediaUrl(message) || ''}
-                        controls
-                        className="w-full max-w-56"
-                      />
-                    )}
-                    {message.mediaType === 'document' && (
-                      <a
-                        href={getMediaUrl(message) || ''}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm underline"
-                      >
-                        📎 Документ
-                      </a>
-                    )}
-                  </div>
-                )}
-                
-                <p
-                  suppressHydrationWarning
-                  className={`text-[11px] mt-1 ${
-                    message.from === 'user' ? 'text-blue-200' : 'text-zinc-400'
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+
+            <a
+              href={`/chat/${inviteToken}`}
+              className="flex items-center gap-3 rounded-2xl bg-[#f1f6fb] px-4 py-3 text-sm text-[#62809a] transition hover:bg-[#e7f0f8] dark:bg-[#22303d] dark:text-[#8ea7bf] dark:hover:bg-[#293847]"
+            >
+              <span className="text-base">←</span>
+              <span>Вернуться к списку</span>
+            </a>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-2 py-2">
+            {chats.map((chat) => {
+              const chatName = getChatName(chat);
+              const isActive = chat.participantChatId === chatId;
+
+              return (
+                <a
+                  key={chat.participantChatId}
+                  href={`/chat/${inviteToken}/${chat.participantChatId}`}
+                  className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition ${
+                    isActive
+                      ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
+                      : 'hover:bg-[#edf4fa] dark:hover:bg-[#22303d]'
                   }`}
                 >
-                  {hydrated ? formatTime(message.timestamp) : ''}
-                </p>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </main>
+                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
+                    isActive
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]'
+                  }`}>
+                    {getInitials(chatName)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-3">
+                      <p className="truncate text-[15px] font-semibold">{chatName}</p>
+                      <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#8ea0b2] dark:text-[#6d8298]'}`}>
+                        {formatSidebarTime(chat.updatedAt)}
+                      </span>
+                    </div>
+                    <p className={`mt-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#73879c] dark:text-[#8ba2b8]'}`}>
+                      {chat.participantUsername ? `@${chat.participantUsername}` : 'Открыть переписку'}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </aside>
 
-      <footer className="shrink-0 bg-white dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 p-4">
-        <div className="max-w-2xl mx-auto flex gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoSelection}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={sending}
-            className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-50 transition-colors"
-            aria-label="Отправить фото"
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5eef5] dark:bg-[#101b27] md:rounded-r-[28px] md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
+          <header className="shrink-0 border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5">
+            <div className="mx-auto flex max-w-5xl items-center gap-3">
+              <a
+                href={`/chat/${inviteToken}`}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
+              >
+                ←
+              </a>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-sm font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
+                {getInitials(currentTitle)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[16px] font-semibold text-[#162433] dark:text-[#f4f7fb]">{currentTitle}</div>
+                <div className="truncate text-[12px] text-[#72869b] dark:text-[#88a0b7]">{currentSubtitle}</div>
+              </div>
+              <button
+                onClick={() => {
+                  const newMode = !darkMode;
+                  setDarkMode(newMode);
+                  localStorage.setItem('darkMode', String(newMode));
+                }}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
+                aria-label="Переключить тему"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </header>
+
+          <main
+            ref={viewportRef}
+            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,255,255,0.30),rgba(255,255,255,0.08)),radial-gradient(circle_at_top,rgba(255,255,255,0.7),transparent_40%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23b4c7d8%22 fill-opacity=%220.16%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(14,22,33,0.42),rgba(14,22,33,0.76)),radial-gradient(circle_at_top,rgba(55,74,96,0.24),transparent_38%),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23354b61%22 fill-opacity=%220.26%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%221.8%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
           >
-            📷
-          </button>
-          <textarea
-            ref={inputRef}
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Введите сообщение..."
-            className="flex-1 resize-none rounded-xl border border-zinc-200 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-4 py-2 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={1}
-            disabled={sending}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!newMessage.trim() || sending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {sending ? '...' : 'Отправить'}
-          </button>
-        </div>
-      </footer>
+            <div className="mx-auto max-w-4xl space-y-4">
+              {groupedMessages.map((group) => (
+                <div key={group.label} className="space-y-3">
+                  <div className="sticky top-2 z-10 flex justify-center">
+                    <div className="rounded-full bg-white/88 px-3 py-1 text-[11px] font-medium text-[#6a8197] shadow-sm backdrop-blur dark:bg-[#1f2c3a]/92 dark:text-[#9cb2c6]">
+                      {group.label}
+                    </div>
+                  </div>
+
+                  {group.messages.map((message) => {
+                    const mediaUrl = getMediaUrl(message);
+                    const isUser = message.from === 'user';
+
+                    return (
+                      <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                        <div
+                          className={`max-w-[82%] rounded-[22px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
+                            isUser
+                              ? 'rounded-br-[10px] bg-[#d9f6c7] text-[#18351f] dark:bg-[#2b5278] dark:text-white'
+                              : 'rounded-bl-[10px] bg-white text-[#1e2e3d] dark:bg-[#182533] dark:text-[#eef5fb]'
+                          }`}
+                        >
+                          {message.mediaType && mediaUrl && (
+                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-2xl bg-black/5 dark:bg-black/20`}>
+                              {message.mediaType === 'photo' && (
+                                <img src={mediaUrl} alt="Фото" className="max-h-[360px] w-full object-cover" />
+                              )}
+                              {message.mediaType === 'video' && (
+                                <video src={mediaUrl} controls className="max-h-[360px] w-full" />
+                              )}
+                              {message.mediaType === 'voice' && (
+                                <audio src={mediaUrl} controls className="m-3 w-[260px] max-w-full" />
+                              )}
+                              {message.mediaType === 'document' && (
+                                <a
+                                  href={mediaUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-3 p-4 text-sm font-medium"
+                                >
+                                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#419fd9] text-lg text-white">📎</span>
+                                  Открыть документ
+                                </a>
+                              )}
+                            </div>
+                          )}
+
+                          {message.text && <p className="whitespace-pre-wrap break-words text-[15px] leading-5">{message.text}</p>}
+
+                          <div className={`mt-1.5 flex items-center justify-end gap-1 text-[11px] ${
+                            isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
+                          }`}>
+                            <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
+                            {message.id.startsWith('local-') && <span>⌛</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </main>
+
+          <footer className="shrink-0 border-t border-black/5 bg-white/92 px-3 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5 md:py-4">
+            <div className="mx-auto flex max-w-4xl items-end gap-2 md:gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoSelection}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending}
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#edf4fa] text-xl text-[#5b7b94] transition hover:bg-[#e2edf7] disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
+                aria-label="Отправить фото"
+              >
+                📎
+              </button>
+              <div className="flex min-h-12 flex-1 items-end rounded-[28px] bg-[#f1f6fb] px-4 py-3 dark:bg-[#22303d]">
+                <textarea
+                  ref={inputRef}
+                  value={newMessage}
+                  onChange={(event) => setNewMessage(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Напишите сообщение"
+                  className="max-h-40 min-h-6 w-full resize-none bg-transparent text-[15px] leading-6 text-[#1f2d3b] outline-none placeholder:text-[#8ca2b7] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
+                  rows={1}
+                  disabled={sending}
+                />
+              </div>
+              <button
+                onClick={() => void sendPayload()}
+                disabled={!newMessage.trim() || sending}
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#56a7f5] text-xl text-white shadow-[0_14px_24px_rgba(86,167,245,0.35)] transition hover:bg-[#4699e7] disabled:cursor-not-allowed disabled:bg-[#a8cfee] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
+                aria-label="Отправить"
+              >
+                {sending ? '…' : '➤'}
+              </button>
+            </div>
+          </footer>
+        </section>
+      </div>
     </div>
   );
 }
