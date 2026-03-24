@@ -68,10 +68,11 @@ function formatUpdatedAt(timestamp: string) {
 interface ChatListClientProps {
   token: string;
   botName: string;
+  botUsername: string;
   chats: ChatMeta[];
 }
 
-export default function ChatListClient({ token, botName, chats }: ChatListClientProps) {
+export default function ChatListClient({ token, botName, botUsername, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [search, setSearch] = useState('');
   const { liveChats } = useLiveChats({ token, initialChats: chats });
@@ -138,6 +139,16 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                 className="w-full bg-transparent text-sm outline-none placeholder:text-[#91a4b7] dark:placeholder:text-[#65809a]"
               />
             </label>
+
+            <a
+              href={`https://t.me/${botUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-between rounded-xl bg-[#edf3f8] px-4 py-3 text-sm text-[#53728d] transition hover:bg-[#e3edf6] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+            >
+              <span className="truncate">Поделиться ботом: @{botUsername}</span>
+              <span className="ml-3 shrink-0">↗</span>
+            </a>
           </div>
 
           <div className="px-2 py-2 md:h-[calc(100vh-134px)] md:overflow-y-auto">

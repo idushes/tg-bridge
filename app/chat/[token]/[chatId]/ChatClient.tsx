@@ -162,6 +162,7 @@ interface ChatClientProps {
   initialMessages: Message[];
   partnerName: string;
   chats: ChatMeta[];
+  botUsername: string;
 }
 
 export default function ChatClient({
@@ -171,6 +172,7 @@ export default function ChatClient({
   initialMessages,
   partnerName,
   chats,
+  botUsername,
 }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { liveChats, setLiveChats } = useLiveChats({ token: inviteToken, initialChats: chats });
@@ -610,6 +612,15 @@ export default function ChatClient({
                 <h1 className="mt-1 text-2xl font-semibold text-[#182533] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
             </div>
+            <a
+              href={`https://t.me/${botUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between rounded-xl bg-[#edf3f8] px-4 py-3 text-sm text-[#53728d] transition hover:bg-[#e3edf6] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+            >
+              <span className="truncate">Поделиться ботом: @{botUsername}</span>
+              <span className="ml-3 shrink-0">↗</span>
+            </a>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-2">

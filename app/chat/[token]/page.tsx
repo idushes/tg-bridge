@@ -34,9 +34,10 @@ export default async function ChatPage({ params }: { params: Promise<{ token: st
         initialMessages={[]}
         partnerName={partnerName}
         chats={chats}
+        botUsername={botConfig.botUsername}
       />
     );
   }
 
-  return <ChatListClient token={token} botName={botConfig.botName} chats={chats} />;
+  return <ChatListClient token={token} botName={botConfig.botName} botUsername={botConfig.botUsername} chats={chats} />;
 }
