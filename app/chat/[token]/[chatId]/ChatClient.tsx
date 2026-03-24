@@ -150,6 +150,104 @@ function MessageStatusIcon({ status, compact = false }: { status: 'pending' | 's
   );
 }
 
+function formatVideoNoteTime(value: number) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return '0:00';
+  }
+
+  const totalSeconds = Math.floor(value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function VideoNotePlayer({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    const syncState = () => {
+      setIsPlaying(!video.paused && !video.ended);
+      setCurrentTime(video.currentTime || 0);
+      setDuration(video.duration || 0);
+    };
+
+    syncState();
+
+    video.addEventListener('play', syncState);
+    video.addEventListener('pause', syncState);
+    video.addEventListener('ended', syncState);
+    video.addEventListener('loadedmetadata', syncState);
+    video.addEventListener('timeupdate', syncState);
+
+    return () => {
+      video.removeEventListener('play', syncState);
+      video.removeEventListener('pause', syncState);
+      video.removeEventListener('ended', syncState);
+      video.removeEventListener('loadedmetadata', syncState);
+      video.removeEventListener('timeupdate', syncState);
+    };
+  }, [src]);
+
+  const togglePlayback = () => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    if (video.paused || video.ended) {
+      if (video.ended) {
+        video.currentTime = 0;
+      }
+
+      void video.play();
+      return;
+    }
+
+    video.pause();
+  };
+
+  const progress = duration > 0 ? Math.min(currentTime / duration, 1) : 0;
+
+  return (
+    <div className="flex justify-center px-3 py-3">
+      <div className="relative h-[220px] w-[220px]">
+        <video
+          ref={videoRef}
+          src={src}
+          playsInline
+          preload="metadata"
+          className="h-full w-full rounded-full bg-black object-cover shadow-[0_16px_36px_rgba(15,23,42,0.24)]"
+          onClick={togglePlayback}
+        />
+        <button
+          type="button"
+          onClick={togglePlayback}
+          className={`absolute inset-0 flex items-center justify-center rounded-full transition ${isPlaying ? 'bg-black/0 hover:bg-black/10' : 'bg-black/18 hover:bg-black/28'}`}
+          aria-label={isPlaying ? 'Пауза' : 'Воспроизвести кружочек'}
+        >
+          <span className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/35 bg-black/45 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] backdrop-blur transition ${isPlaying ? 'scale-90 opacity-0' : 'scale-100 opacity-100'}`}>
+            {isPlaying ? '❚❚' : '▶'}
+          </span>
+        </button>
+        <div className="pointer-events-none absolute inset-x-5 bottom-4 h-1.5 overflow-hidden rounded-full bg-white/28">
+          <div className="h-full rounded-full bg-white transition-[width] duration-150 ease-out" style={{ width: `${progress * 100}%` }} />
+        </div>
+        <div className="pointer-events-none absolute bottom-7 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+          {formatVideoNoteTime(duration - currentTime > 0 ? duration - currentTime : duration)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatDayLabel(timestamp: string) {
   return new Date(timestamp).toLocaleDateString('ru-RU', {
     day: 'numeric',
@@ -853,15 +951,7 @@ export default function ChatClient({
                                 <video src={mediaUrl} controls className="max-h-[420px] w-full" />
                               )}
                               {message.mediaType === 'video_note' && (
-                                <div className="flex justify-center px-3 py-3">
-                                  <video
-                                    src={mediaUrl}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                    className="h-[220px] w-[220px] rounded-full bg-black object-cover shadow-[0_16px_36px_rgba(15,23,42,0.24)]"
-                                  />
-                                </div>
+                                <VideoNotePlayer src={mediaUrl} />
                               )}
                               {message.mediaType === 'voice' && (
                                 <div className="min-w-[240px] max-w-full px-3 py-3">
