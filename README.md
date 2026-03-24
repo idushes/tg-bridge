@@ -39,6 +39,14 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Quick Start
+
+1. Create a Neon database and copy its connection string into `DATABASE_URL`
+2. Generate VAPID keys with `npx web-push generate-vapid-keys`
+3. Copy `.env.example` to `.env.local` and fill in all required values
+4. Run `npm install` and `npm run dev`
+5. Open `/admin`, add a bot token, then use the generated public chat link
+
 ## Current Architecture
 
 - `bots` are stored in Postgres with `invite_token`
