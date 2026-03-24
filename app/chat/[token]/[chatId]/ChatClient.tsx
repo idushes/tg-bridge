@@ -773,13 +773,13 @@ export default function ChatClient({
 
           <main
             ref={viewportRef}
-            className="min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(255,251,245,0.72),rgba(243,237,227,0.88)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23c8b59f%22 fill-opacity=%220.12%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] px-3 py-4 dark:bg-[linear-gradient(180deg,rgba(15,23,32,0.30),rgba(15,23,32,0.18)),url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 48 48%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%2332465b%22 fill-opacity=%220.22%22%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%221.6%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] md:px-6"
+            className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(236,243,250,0.92),rgba(221,232,243,0.98)_55%,rgba(214,227,240,1))] px-2.5 py-4 dark:bg-[radial-gradient(circle_at_top,rgba(26,40,56,0.96),rgba(19,30,43,0.98)_58%,rgba(15,23,32,1))] md:px-5"
           >
-            <div className="mx-auto w-full max-w-[58rem] space-y-4">
+            <div className="mx-auto w-full max-w-[54rem] space-y-3.5">
               {groupedMessages.map((group) => (
-                <div key={group.label} className="space-y-3">
+                <div key={group.label} className="space-y-2.5">
                   <div className="sticky top-2 z-10 flex justify-center">
-                    <div className="rounded-full bg-[#fffaf4]/92 px-3 py-1 text-[11px] font-medium text-[#837565] shadow-sm backdrop-blur dark:bg-[#1f2c3a]/92 dark:text-[#9cb2c6]">
+                    <div className="rounded-full bg-[#d4e4f2]/94 px-3 py-1 text-[11px] font-medium text-[#5b748e] shadow-[0_6px_18px_rgba(78,109,140,0.12)] backdrop-blur dark:bg-[#233447]/92 dark:text-[#9cb2c6]">
                       {group.label}
                     </div>
                   </div>
@@ -791,22 +791,22 @@ export default function ChatClient({
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${freshMessageIds.includes(message.id) ? 'animate-[message-pop_220ms_ease-out]' : ''}`}
+                        className={`flex ${isUser ? 'justify-end pl-8' : 'justify-start pr-8'} ${freshMessageIds.includes(message.id) ? 'animate-[message-pop_220ms_ease-out]' : ''}`}
                       >
                         <div
-                          className={`max-w-[82%] rounded-[20px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
+                          className={`group relative max-w-[85%] rounded-[1.15rem] px-3 py-2 shadow-[0_1px_1.5px_rgba(15,23,42,0.08)] md:max-w-[72%] ${
                             isUser
-                              ? 'rounded-br-[10px] bg-[#dceccf] text-[#274126] dark:bg-[#2b5278] dark:text-white'
-                              : 'rounded-bl-[10px] bg-[#fffaf4] text-[#2b3440] dark:bg-[#182533] dark:text-[#eef5fb]'
+                              ? 'rounded-br-[0.4rem] bg-[#d9f5c7] text-[#1f3b1f] before:absolute before:-right-[5px] before:bottom-0 before:h-4 before:w-4 before:rounded-br-[0.3rem] before:bg-[#d9f5c7] before:[clip-path:polygon(0_0,0_100%,100%_100%)] dark:bg-[#2b5278] dark:text-white dark:before:bg-[#2b5278]'
+                              : 'rounded-bl-[0.4rem] bg-white text-[#243140] before:absolute before:-left-[5px] before:bottom-0 before:h-4 before:w-4 before:rounded-bl-[0.3rem] before:bg-white before:[clip-path:polygon(100%_0,0_100%,100%_100%)] dark:bg-[#182533] dark:text-[#eef5fb] dark:before:bg-[#182533]'
                           }`}
                         >
                           {message.mediaType && mediaUrl && (
-                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[16px] bg-black/5 dark:bg-black/20`}>
+                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[14px] bg-black/5 dark:bg-black/20`}>
                               {message.mediaType === 'photo' && (
                                 <button
                                   type="button"
                                   onClick={() => setExpandedPhoto({ src: mediaUrl, alt: 'Фото' })}
-                                  className="relative block min-w-[180px] max-w-[280px] cursor-zoom-in overflow-hidden rounded-[16px] text-left outline-none transition hover:scale-[1.01]"
+                                  className="relative block min-w-[180px] max-w-[280px] cursor-zoom-in overflow-hidden rounded-[14px] text-left outline-none transition hover:scale-[1.01]"
                                 >
                                   {!loadedMediaIds[message.id] && (
                                     <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-[#efe4d6] to-[#e2d2c1] dark:from-[#22303d] dark:to-[#1c2732]" />
@@ -861,14 +861,14 @@ export default function ChatClient({
                           )}
 
                           {message.text && (
-                            <p className={`whitespace-pre-wrap break-words text-[15px] leading-5 ${message.mediaType === 'photo' ? 'px-0.5' : ''}`}>
+                            <p className={`whitespace-pre-wrap break-words pr-12 text-[15px] leading-[1.32rem] ${message.mediaType === 'photo' ? 'px-0.5' : ''}`}>
                               {message.text}
                             </p>
                           )}
 
                           {message.mediaType !== 'photo' && (
-                            <div className={`mt-1.5 flex items-center justify-end gap-1 text-[11px] ${
-                              isUser ? 'text-[#6b7c5f] dark:text-[#b7d4f4]' : 'text-[#867766] dark:text-[#8ea7bf]'
+                            <div className={`absolute bottom-2 right-3 flex items-center justify-end gap-1 text-[11px] ${
+                              isUser ? 'text-[#6c8758] dark:text-[#b7d4f4]' : 'text-[#7b8ea4] dark:text-[#8ea7bf]'
                             }`}>
                               <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
                               {isUser && <MessageStatusIcon status={getMessageStatus(message)} />}
@@ -884,7 +884,7 @@ export default function ChatClient({
             </div>
           </main>
 
-          <footer className="shrink-0 border-t border-[#ddd2c3] bg-[#fbf7f0] px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5 md:py-4">
+          <footer className="shrink-0 border-t border-[#d6e2ec] bg-[#edf3f8] px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 dark:border-[#1e2b38] dark:bg-[#17212b] md:px-5 md:py-4">
             <div className="flex items-end gap-2 md:gap-3">
               <input
                 ref={fileInputRef}
@@ -896,19 +896,19 @@ export default function ChatClient({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending}
-                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#f1e7da] text-xl text-[#746958] transition hover:bg-[#e8dccd] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
+                className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#dfe9f2] text-xl text-[#5f7e99] transition hover:bg-[#d2e1ed] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
                 aria-label="Отправить фото"
               >
                 📎
               </button>
-              <div className="flex min-h-12 flex-1 items-end rounded-[28px] bg-[#f4ece2] px-4 py-3 dark:bg-[#22303d]">
+              <div className="flex min-h-11 flex-1 items-end rounded-[1.6rem] bg-white px-4 py-2.5 shadow-[inset_0_0_0_1px_rgba(201,214,226,0.9)] dark:bg-[#22303d] dark:shadow-none">
                 <textarea
                   ref={inputRef}
                   value={newMessage}
                   onChange={(event) => setNewMessage(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Напишите сообщение"
-                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2d3540] outline-none placeholder:text-[#a29280] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
+                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2b3948] outline-none placeholder:text-[#89a0b5] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
                   rows={1}
                   disabled={sending}
                 />
@@ -916,7 +916,7 @@ export default function ChatClient({
               <button
                 onClick={() => void sendPayload()}
                 disabled={!newMessage.trim() || sending}
-                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#4f8fd0] text-xl text-white shadow-[0_14px_24px_rgba(79,143,208,0.32)] transition hover:bg-[#437bb3] disabled:cursor-not-allowed disabled:bg-[#b7c9d9] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
+                className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#4f8fd0] text-lg text-white shadow-[0_10px_22px_rgba(79,143,208,0.28)] transition hover:bg-[#437bb3] disabled:cursor-not-allowed disabled:bg-[#b7c9d9] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
                 aria-label="Отправить"
               >
                 {sending ? '…' : '➤'}
