@@ -615,8 +615,8 @@ export default function ChatClient({
   return (
     <div className="h-screen overflow-hidden bg-[#ebe4d8] text-[#293241] transition-colors dark:bg-[#0e1621] dark:text-white">
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
-        <aside className="hidden w-[26rem] shrink-0 overflow-hidden border-r border-[#ddd2c3] bg-[#fbf7f0] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col">
-          <div className="border-b border-[#ddd2c3] px-4 pb-4 pt-5 dark:border-[#1e2b38]">
+        <aside className="hidden w-[21.5rem] shrink-0 overflow-hidden border-r border-[#ddd2c3] bg-[#fbf7f0] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col xl:w-[22.5rem]">
+          <div className="border-b border-[#ddd2c3] px-3.5 pb-4 pt-5 dark:border-[#1e2b38] xl:px-4">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a7966] dark:text-[#6c8299]">
@@ -628,7 +628,7 @@ export default function ChatClient({
             <button
               type="button"
               onClick={copyBotLink}
-              className="flex items-center justify-between rounded-xl bg-[#f2e9de] px-4 py-3 text-sm text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+              className="flex items-center justify-between rounded-xl bg-[#f2e9de] px-3.5 py-3 text-sm text-[#6c6f75] transition hover:bg-[#eadfce] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847] xl:px-4"
             >
               <span className="truncate">{copiedBotLink ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
               <span className="ml-3 shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
@@ -637,7 +637,7 @@ export default function ChatClient({
               <button
                 type="button"
                 onClick={() => void promptInstall()}
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#4f8fd0] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#437bb3]"
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#4f8fd0] px-3.5 py-3 text-sm font-medium text-white transition hover:bg-[#437bb3] xl:px-4"
               >
                 <span>Установить как приложение</span>
                 <span className="ml-3 shrink-0">＋</span>
@@ -658,13 +658,13 @@ export default function ChatClient({
                     markChatAsRead(inviteToken, chat);
                     setActiveChatId(chat.participantChatId);
                   }}
-                    className={`relative overflow-hidden flex items-center gap-3 rounded-xl px-3 py-3 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(79,143,208,0.16),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
+                    className={`relative overflow-hidden flex items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition active:scale-[0.992] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,rgba(79,143,208,0.16),transparent_62%)] before:opacity-0 before:transition before:duration-200 active:before:opacity-100 ${
                      isActive
                         ? 'bg-[#4f8fd0] text-white shadow-[0_14px_30px_rgba(79,143,208,0.24)] dark:bg-[#2b5278]'
                        : 'active:bg-[#ece2d4] hover:bg-[#f2e9de] dark:active:bg-[#22303d] dark:hover:bg-[#1f2c39] dark:before:bg-[radial-gradient(circle_at_center,rgba(95,176,255,0.16),transparent_62%)]'
                    }`}
                  >
-                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
+                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
                     isActive
                       ? 'bg-white/20 text-white'
                        : 'bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0] text-white shadow-[0_10px_20px_rgba(79,143,208,0.24)]'
