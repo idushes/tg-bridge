@@ -623,6 +623,12 @@ export default function ChatClient({
 
   return (
     <div className="h-screen overflow-hidden bg-[#dfe8f1] text-[#223140] transition-colors dark:bg-[#0e1621] dark:text-white">
+      {copiedBotLink && (
+        <div className="pointer-events-none fixed left-1/2 top-5 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/70 bg-white/92 px-3 py-1.5 text-xs font-medium text-[#496783] shadow-[0_12px_32px_rgba(76,143,202,0.18)] backdrop-blur dark:border-white/10 dark:bg-[#22303d]/96 dark:text-[#c1d6ea]">
+          <span className="text-[11px] text-[#419fd9] dark:text-[#72bbff]">✓</span>
+          <span>Ссылка скопирована</span>
+        </div>
+      )}
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
         <aside className="hidden w-[22rem] shrink-0 overflow-hidden border-r border-[#cfdbe6] bg-[#f4f8fb] dark:border-[#1e2b38] dark:bg-[#17212b] md:flex md:flex-col xl:w-[23rem]">
           <div className="border-b border-[#d8e3ec] px-3 pb-3 pt-4 dark:border-[#1e2b38]">
@@ -633,13 +639,7 @@ export default function ChatClient({
                 </p>
                 <h1 className="mt-1 text-[28px] font-semibold text-[#233547] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
-              <div className="relative flex items-center gap-2">
-                {copiedBotLink && (
-                  <div className="pointer-events-none absolute left-12 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 text-[11px] font-medium text-[#496783] shadow-[0_10px_24px_rgba(76,143,202,0.18)] backdrop-blur dark:border-white/10 dark:bg-[#22303d]/96 dark:text-[#b7cee4]">
-                    <span className="text-[10px] text-[#419fd9] dark:text-[#72bbff]">✓</span>
-                    <span className="whitespace-nowrap">Скопировано</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={copyBotLink}

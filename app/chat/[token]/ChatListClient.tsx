@@ -130,6 +130,12 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
 
   return (
     <div className="min-h-screen bg-[#dfe8f1] dark:bg-[#0e1621] transition-colors">
+      {copied && (
+        <div className="pointer-events-none fixed left-1/2 top-5 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/70 bg-white/92 px-3 py-1.5 text-xs font-medium text-[#496783] shadow-[0_12px_32px_rgba(76,143,202,0.18)] backdrop-blur dark:border-white/10 dark:bg-[#22303d]/96 dark:text-[#c1d6ea]">
+          <span className="text-[11px] text-[#419fd9] dark:text-[#72bbff]">✓</span>
+          <span>Ссылка скопирована</span>
+        </div>
+      )}
       <div className="min-h-screen pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
         <aside className="min-h-screen w-full bg-[#f4f8fb] dark:bg-[#17212b]">
           <div className="border-b border-[#d8e3ec] px-4 pb-3 pt-4 dark:border-[#1e2b38] md:px-6">
@@ -163,13 +169,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
               />
             </label>
 
-            <div className="relative mt-3 inline-flex">
-              {copied && (
-                <div className="pointer-events-none absolute left-12 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 text-[11px] font-medium text-[#496783] shadow-[0_10px_24px_rgba(76,143,202,0.18)] backdrop-blur dark:border-white/10 dark:bg-[#22303d]/96 dark:text-[#b7cee4]">
-                  <span className="text-[10px] text-[#419fd9] dark:text-[#72bbff]">✓</span>
-                  <span className="whitespace-nowrap">Скопировано</span>
-                </div>
-              )}
+            <div className="mt-3 inline-flex">
               <button
                 type="button"
                 onClick={copyBotLink}
