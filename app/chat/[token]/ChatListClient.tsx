@@ -75,6 +75,7 @@ interface ChatListClientProps {
 export default function ChatListClient({ token, botName, botUsername, chats }: ChatListClientProps) {
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
   const [search, setSearch] = useState('');
+  const [copied, setCopied] = useState(false);
   const { liveChats } = useLiveChats({ token, initialChats: chats });
 
   useChatNotifications({ token });
@@ -104,6 +105,16 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
       return haystack.includes(query);
     });
   }, [liveChats, search]);
+
+  const copyBotLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`https://t.me/${botUsername}`);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#d7e3ec] dark:bg-[#0e1621] transition-colors">
@@ -140,15 +151,14 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
               />
             </label>
 
-            <a
-              href={`https://t.me/${botUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={copyBotLink}
               className="mt-3 flex items-center justify-between rounded-xl bg-[#edf3f8] px-4 py-3 text-sm text-[#53728d] transition hover:bg-[#e3edf6] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
             >
-              <span className="truncate">Поделиться ботом: @{botUsername}</span>
-              <span className="ml-3 shrink-0">↗</span>
-            </a>
+              <span className="truncate">{copied ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
+              <span className="ml-3 shrink-0">{copied ? '✓' : '⧉'}</span>
+            </button>
           </div>
 
           <div className="px-2 py-2 md:px-3 md:py-3">

@@ -177,6 +177,7 @@ export default function ChatClient({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { liveChats, setLiveChats } = useLiveChats({ token: inviteToken, initialChats: chats });
   const [activeChatId, setActiveChatId] = useState(chatId);
+  const [copiedBotLink, setCopiedBotLink] = useState(false);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -599,6 +600,16 @@ export default function ChatClient({
     ? `был(а) недавно · @${activeChat.participantUsername}`
     : 'Сообщения доставляются через Telegram';
 
+  const copyBotLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`https://t.me/${botUsername}`);
+      setCopiedBotLink(true);
+      window.setTimeout(() => setCopiedBotLink(false), 1800);
+    } catch {
+      setCopiedBotLink(false);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden bg-[#d7e3ec] text-[#1d2a39] transition-colors dark:bg-[#0e1621] dark:text-white">
       <div className="flex h-full pb-[max(env(safe-area-inset-bottom),0px)] pt-[max(env(safe-area-inset-top),0px)]">
@@ -612,15 +623,14 @@ export default function ChatClient({
                 <h1 className="mt-1 text-2xl font-semibold text-[#182533] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
             </div>
-            <a
-              href={`https://t.me/${botUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={copyBotLink}
               className="flex items-center justify-between rounded-xl bg-[#edf3f8] px-4 py-3 text-sm text-[#53728d] transition hover:bg-[#e3edf6] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
             >
-              <span className="truncate">Поделиться ботом: @{botUsername}</span>
-              <span className="ml-3 shrink-0">↗</span>
-            </a>
+              <span className="truncate">{copiedBotLink ? 'Ссылка на бота скопирована' : `Скопировать ссылку на бота @${botUsername}`}</span>
+              <span className="ml-3 shrink-0">{copiedBotLink ? '✓' : '⧉'}</span>
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-2">
