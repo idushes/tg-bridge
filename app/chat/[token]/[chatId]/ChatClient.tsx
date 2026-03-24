@@ -633,7 +633,12 @@ export default function ChatClient({
                 </p>
                 <h1 className="mt-1 text-[28px] font-semibold text-[#233547] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="relative flex items-center gap-2">
+                {copiedBotLink && (
+                  <div className="pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#233547] px-3 py-1 text-[11px] font-medium text-white shadow-[0_10px_24px_rgba(35,53,71,0.2)] dark:bg-[#f4f7fb] dark:text-[#17212b]">
+                    Ссылка скопирована
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={copyBotLink}

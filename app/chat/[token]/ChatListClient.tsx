@@ -163,15 +163,22 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
               />
             </label>
 
-            <button
-              type="button"
-              onClick={copyBotLink}
-              className="mt-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f0f7] text-[15px] text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
-              aria-label={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
-              title={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
-            >
-              <span className="shrink-0 leading-none">{copied ? '✓' : '⧉'}</span>
-            </button>
+            <div className="relative mt-3 inline-flex">
+              {copied && (
+                <div className="pointer-events-none absolute -top-11 left-1/2 z-10 -translate-x-1/2 rounded-full bg-[#233547] px-3 py-1 text-[11px] font-medium text-white shadow-[0_10px_24px_rgba(35,53,71,0.2)] dark:bg-[#f4f7fb] dark:text-[#17212b]">
+                  Ссылка скопирована
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={copyBotLink}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f0f7] text-[15px] text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#9db9d1] dark:hover:bg-[#293847]"
+                aria-label={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
+                title={copied ? 'Ссылка скопирована' : `Скопировать ссылку на бота @${botUsername}`}
+              >
+                <span className="shrink-0 leading-none">{copied ? '✓' : '⧉'}</span>
+              </button>
+            </div>
 
             {canInstall && (
               <button
