@@ -208,8 +208,15 @@ export default function ChatClient({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const restoreFocusAfterSendRef = useRef(false);
   const { canInstall, promptInstall } = useInstallPrompt();
   const darkMode = darkModeOverride ?? (hydrated ? getPreferredDarkMode() : false);
+
+  const focusComposer = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+  }, []);
 
   const activeChat = useMemo(
     () => liveChats.find((chat) => chat.participantChatId === activeChatId) ?? null,
@@ -338,6 +345,17 @@ export default function ChatClient({
     textarea.style.height = '0px';
     textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   }, [newMessage]);
+
+  useEffect(() => {
+    focusComposer();
+  }, [activeChatId, focusComposer]);
+
+  useEffect(() => {
+    if (!sending && restoreFocusAfterSendRef.current) {
+      restoreFocusAfterSendRef.current = false;
+      focusComposer();
+    }
+  }, [focusComposer, sending]);
 
   const syncMessages = useCallback(async () => {
     try {
@@ -484,6 +502,8 @@ export default function ChatClient({
     if ((!text && !file) || sending) {
       return;
     }
+
+    restoreFocusAfterSendRef.current = document.activeElement === inputRef.current;
 
     const clientId = `local-${Date.now()}`;
     const optimisticMessage: Message = {
@@ -906,6 +926,7 @@ export default function ChatClient({
                   value={newMessage}
                   onChange={(event) => setNewMessage(event.target.value)}
                   onKeyDown={handleKeyDown}
+                  autoFocus
                   placeholder="Напишите сообщение"
                   className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2b3948] outline-none placeholder:text-[#89a0b5] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
                   rows={1}
