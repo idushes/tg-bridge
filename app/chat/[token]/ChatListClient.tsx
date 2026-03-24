@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
+import { getUnreadCount, markChatAsRead } from './chatReadState';
 import { useChatNotifications } from './useChatNotifications';
 import { useLiveChats } from './useLiveChats';
 
@@ -160,7 +161,8 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                     href={`/chat/${token}/${chat.participantChatId}`}
                     prefetch
                     scroll={false}
-                    className="flex items-center gap-3 rounded-[22px] px-3 py-3 transition hover:bg-[#edf4fa] dark:hover:bg-[#22303d]"
+                    onClick={() => markChatAsRead(token, chat)}
+                    className="flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d]"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-base font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
                       {getInitials(chatName)}
@@ -172,7 +174,14 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                           {formatUpdatedAt(chat.updatedAt)}
                         </span>
                       </div>
-                      <p className="mt-1 truncate text-[13px] text-[#73879c] dark:text-[#8ba2b8]">{getChatSubtitle(chat)}</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <p className="min-w-0 flex-1 truncate text-[13px] text-[#73879c] dark:text-[#8ba2b8]">{getChatSubtitle(chat)}</p>
+                        {getUnreadCount(token, chat) > 0 && (
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#4ea4f6] px-1.5 text-[11px] font-semibold text-white shadow-[0_6px_12px_rgba(78,164,246,0.35)]">
+                            {getUnreadCount(token, chat)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 );

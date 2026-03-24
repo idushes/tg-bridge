@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
+import { getUnreadCount, markChatAsRead } from '../chatReadState';
 import { useChatNotifications } from '../useChatNotifications';
 import { useLiveChats } from '../useLiveChats';
 
@@ -199,6 +200,12 @@ export default function ChatClient({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (activeChat) {
+      markChatAsRead(inviteToken, activeChat);
+    }
+  }, [activeChat, inviteToken]);
 
   useEffect(() => {
     setLiveChats(chats);
@@ -512,10 +519,11 @@ export default function ChatClient({
                   href={`/chat/${inviteToken}/${chat.participantChatId}`}
                   prefetch
                   scroll={false}
-                  className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition ${
+                  onClick={() => markChatAsRead(inviteToken, chat)}
+                  className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition active:scale-[0.992] ${
                     isActive
                       ? 'bg-[#419fd9] text-white shadow-[0_14px_30px_rgba(65,159,217,0.26)] dark:bg-[#2b5278]'
-                      : 'hover:bg-[#edf4fa] dark:hover:bg-[#22303d]'
+                      : 'active:bg-[#e6f0f8] hover:bg-[#edf4fa] dark:active:bg-[#263543] dark:hover:bg-[#22303d]'
                   }`}
                 >
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
@@ -532,9 +540,16 @@ export default function ChatClient({
                         {formatSidebarTime(chat.updatedAt)}
                       </span>
                     </div>
-                    <p className={`mt-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#73879c] dark:text-[#8ba2b8]'}`}>
-                      {getChatPreview(chat)}
-                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#73879c] dark:text-[#8ba2b8]'}`}>
+                        {getChatPreview(chat)}
+                      </p>
+                      {!isActive && getUnreadCount(inviteToken, chat) > 0 && (
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white/95 px-1.5 text-[11px] font-semibold text-[#419fd9] shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
+                          {getUnreadCount(inviteToken, chat)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );
@@ -625,7 +640,17 @@ export default function ChatClient({
                                 <video src={mediaUrl} controls className="max-h-[420px] w-full" />
                               )}
                               {message.mediaType === 'voice' && (
-                                <audio src={mediaUrl} controls className="m-3 w-[260px] max-w-full" />
+                                <div className="flex items-center gap-3 px-3 py-3">
+                                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4ea4f6] text-lg text-white shadow-[0_10px_24px_rgba(78,164,246,0.35)]">
+                                    ▶
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="mb-2 h-1.5 rounded-full bg-black/10 dark:bg-white/10">
+                                      <div className="h-full w-1/3 rounded-full bg-[#4ea4f6]" />
+                                    </div>
+                                    <audio src={mediaUrl} controls className="w-[260px] max-w-full" />
+                                  </div>
+                                </div>
                               )}
                               {message.mediaType === 'document' && (
                                 <a
@@ -634,8 +659,11 @@ export default function ChatClient({
                                   rel="noopener noreferrer"
                                   className="flex cursor-pointer items-center gap-3 p-4 text-sm font-medium"
                                 >
-                                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#419fd9] text-lg text-white">📎</span>
-                                  Открыть документ
+                                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#419fd9] text-lg text-white shadow-[0_10px_24px_rgba(65,159,217,0.28)]">📄</span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-[14px] font-semibold">Документ</span>
+                                    <span className="block text-[12px] opacity-70">Открыть вложение</span>
+                                  </span>
                                 </a>
                               )}
                             </div>
