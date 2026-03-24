@@ -34,7 +34,7 @@ export interface Message {
   from: 'user' | 'operator';
   timestamp: string;
   seq?: number;
-  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'video_note';
+  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'video_note' | 'audio';
   mediaFileId?: string;
   mediaUrl?: string;
   botId?: number;

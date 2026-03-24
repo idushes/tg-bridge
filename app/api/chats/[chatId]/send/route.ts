@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getChatByInviteToken, getChatMeta, addMessageToChat, saveChatMeta } from '@/lib/blob';
-import { sendMessageToChat, sendPhotoFile } from '@/lib/telegram';
+import { sendAudioFile, sendMessageToChat, sendPhotoFile } from '@/lib/telegram';
 import type { Message } from '@/lib/types';
 
 export async function POST(
@@ -35,13 +35,18 @@ export async function POST(
       ? String(body.get('text') || '').trim()
       : String(body.text || '').trim();
     const photo = isMultipart ? body.get('photo') : null;
+    const audio = isMultipart ? body.get('audio') : null;
 
-    if (!text && !(photo instanceof File)) {
+    if (!text && !(photo instanceof File) && !(audio instanceof File)) {
       return NextResponse.json({ error: 'Empty message' }, { status: 400 });
     }
 
     if (photo instanceof File && !photo.type.startsWith('image/')) {
       return NextResponse.json({ error: 'Only images are supported' }, { status: 400 });
+    }
+
+    if (audio instanceof File && !audio.type.startsWith('audio/')) {
+      return NextResponse.json({ error: 'Only audio files are supported' }, { status: 400 });
     }
 
     let mediaType: Message['mediaType'];
@@ -54,6 +59,14 @@ export async function POST(
       }
 
       mediaType = 'photo';
+      mediaFileId = uploaded.fileId;
+    } else if (audio instanceof File) {
+      const uploaded = await sendAudioFile(chatData.config.botToken, participantChatId, audio, text || undefined);
+      if (!uploaded.ok) {
+        return NextResponse.json({ error: 'Failed to send audio to Telegram' }, { status: 500 });
+      }
+
+      mediaType = 'audio';
       mediaFileId = uploaded.fileId;
     } else {
       const sent = await sendMessageToChat(chatData.config.botToken, participantChatId, text);

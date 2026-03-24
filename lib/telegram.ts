@@ -38,7 +38,7 @@ export async function sendMessage(
 export async function sendMedia(
   botToken: string,
   chatId: number,
-  mediaType: 'photo' | 'video' | 'voice' | 'document',
+  mediaType: 'photo' | 'video' | 'voice' | 'document' | 'audio',
   fileId: string,
   caption?: string
 ): Promise<boolean> {
@@ -48,12 +48,13 @@ export async function sendMedia(
       video: 'sendVideo',
       voice: 'sendVoice',
       document: 'sendDocument',
+      audio: 'sendAudio',
     };
     
     const method = methodMap[mediaType];
     const body: Record<string, unknown> = {
       chat_id: chatId,
-      [mediaType === 'voice' ? 'voice' : mediaType]: fileId,
+      [mediaType]: fileId,
     };
     
     if (caption) {
@@ -189,10 +190,47 @@ export async function sendPhotoFile(
   }
 }
 
+export async function sendAudioFile(
+  botToken: string,
+  chatId: number,
+  file: File,
+  caption?: string
+): Promise<{ ok: boolean; fileId?: string }> {
+  try {
+    const formData = new FormData();
+    formData.set('chat_id', String(chatId));
+    formData.set('audio', file, file.name);
+
+    if (caption) {
+      formData.set('caption', caption);
+    }
+
+    const response = await fetch(`${TELEGRAM_API_BASE}/bot${botToken}/sendAudio`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json() as {
+      ok: boolean;
+      result?: {
+        audio?: { file_id: string };
+      };
+    };
+
+    if (!data.ok) {
+      return { ok: false };
+    }
+
+    return { ok: true, fileId: data.result?.audio?.file_id };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export function extractMessageFromUpdate(update: TelegramUpdate): {
   chatId: number;
   text: string;
-  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'video_note';
+  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'video_note' | 'audio';
   mediaFileId?: string;
   unsupportedMessageType?: string;
 } | null {
@@ -200,7 +238,7 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
   
   const msg = update.message;
   let text = msg.text || '';
-  let mediaType: 'photo' | 'video' | 'voice' | 'document' | 'video_note' | undefined;
+  let mediaType: 'photo' | 'video' | 'voice' | 'document' | 'video_note' | 'audio' | undefined;
   let mediaFileId: string | undefined;
   
   if (msg.photo && msg.photo.length > 0) {
@@ -224,6 +262,12 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
     if (!text && msg.caption) {
       text = msg.caption;
     }
+  } else if (msg.audio) {
+    mediaType = 'audio';
+    mediaFileId = msg.audio.file_id;
+    if (!text && msg.caption) {
+      text = msg.caption;
+    }
   } else if (msg.video_note) {
     mediaType = 'video_note';
     mediaFileId = msg.video_note.file_id;
@@ -231,7 +275,6 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
 
   const unsupportedMessageType = !mediaFileId && !text
     ? ([
-        ['audio', msg.audio],
         ['sticker', msg.sticker],
         ['animation', msg.animation],
         ['contact', msg.contact],
@@ -259,7 +302,7 @@ export async function sendMessageToChat(
   botToken: string,
   chatId: number,
   text: string,
-  mediaType?: 'photo' | 'video' | 'voice' | 'document',
+  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'audio',
   mediaFileId?: string
 ): Promise<boolean> {
   if (mediaFileId && mediaType) {

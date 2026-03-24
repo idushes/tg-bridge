@@ -5,7 +5,7 @@ import { extractMessageFromUpdate, getUserProfilePhotoFileId, sendMessage } from
 import type { Message, TelegramUpdate, ChatMeta } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
-const UNSUPPORTED_MESSAGE_TEXT = 'Этот тип сообщения пока не поддерживается в веб-чате. Отправьте текст, фото, видео, голосовое или документ.';
+const UNSUPPORTED_MESSAGE_TEXT = 'Этот тип сообщения пока не поддерживается в веб-чате. Отправьте текст, фото, видео, голосовое, аудио или документ.';
 
 export async function POST(
   request: NextRequest,

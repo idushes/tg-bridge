@@ -93,6 +93,7 @@ function getChatPreview(chat: ChatMeta) {
       photo: 'Фото',
       video: 'Видео',
       voice: 'Голосовое',
+      audio: 'Аудио',
       video_note: 'Кружочек',
       document: 'Документ',
     }[chat.lastMessageMediaType];
@@ -186,6 +187,13 @@ function formatVideoNoteTime(value: number) {
   }
 
   const totalSeconds = Math.floor(value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatRecordingTime(value: number) {
+  const totalSeconds = Math.max(0, Math.floor(value));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
@@ -329,6 +337,10 @@ export default function ChatClient({
   const [freshMessageIds, setFreshMessageIds] = useState<string[]>([]);
   const [failedAvatarIds, setFailedAvatarIds] = useState<Record<number, boolean>>({});
   const [shouldStickToBottom, setShouldStickToBottom] = useState(true);
+  const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'preview'>('idle');
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [recordedAudioFile, setRecordedAudioFile] = useState<File | null>(null);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
   const previousMessageCountRef = useRef(initialMessages.length);
   const latestSeqRef = useRef(getMaxSeq(initialMessages));
   const messageIdsRef = useRef<Set<string>>(new Set(initialMessages.map((message) => message.id)));
@@ -338,6 +350,10 @@ export default function ChatClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const restoreFocusAfterSendRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingCancelledRef = useRef(false);
   const { canInstall, promptInstall } = useInstallPrompt();
   const darkMode = darkModeOverride ?? (hydrated ? getPreferredDarkMode() : false);
 
@@ -400,6 +416,26 @@ export default function ChatClient({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [expandedPhoto]);
+
+  useEffect(() => {
+    if (recordingState !== 'recording') {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setRecordingSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [recordingState]);
+
+  useEffect(() => () => {
+    if (recordedAudioUrl) {
+      URL.revokeObjectURL(recordedAudioUrl);
+    }
+
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+  }, [recordedAudioUrl]);
 
   useEffect(() => {
     if (activeChat) {
@@ -626,7 +662,10 @@ export default function ChatClient({
     return () => viewport.removeEventListener('scroll', updateStickiness);
   }, []);
 
-  const sendPayload = async (file?: File) => {
+  const sendPayload = async (options?: { file?: File; mediaType?: Message['mediaType']; fieldName?: 'photo' | 'audio' }) => {
+    const file = options?.file;
+    const mediaType = options?.mediaType;
+    const fieldName = options?.fieldName;
     const text = newMessage.trim();
     if ((!text && !file) || sending) {
       return;
@@ -640,7 +679,7 @@ export default function ChatClient({
       text,
       from: 'user',
       timestamp: new Date().toISOString(),
-      mediaType: file ? 'photo' : undefined,
+      mediaType: file ? mediaType : undefined,
       mediaUrl: file ? URL.createObjectURL(file) : undefined,
     };
 
@@ -658,12 +697,12 @@ export default function ChatClient({
     try {
       const response = await fetch(
         `/api/chats/${activeChatId}/send?inviteToken=${inviteToken}&botId=${botId}`,
-        file
+        file && fieldName
           ? {
               method: 'POST',
               body: (() => {
                 const formData = new FormData();
-                formData.set('photo', file);
+                formData.set(fieldName, file);
                 formData.set('text', text);
                 return formData;
               })(),
@@ -701,6 +740,10 @@ export default function ChatClient({
       setMessages((current) => upsertMessage(current, data.message));
       messageIdsRef.current = new Set([...messageIdsRef.current, data.message.id]);
       latestSeqRef.current = Math.max(latestSeqRef.current, data.message.seq ?? 0);
+
+      if (file && mediaType === 'audio') {
+        clearRecordedAudio();
+      }
     } catch (error) {
       setPendingMessages((current) => current.filter((pending) => pending.clientId !== clientId));
       revokePreviewUrl(optimisticMessage);
@@ -717,7 +760,115 @@ export default function ChatClient({
     if (!file) {
       return;
     }
-    await sendPayload(file);
+    await sendPayload({ file, mediaType: 'photo', fieldName: 'photo' });
+  };
+
+  const clearRecordedAudio = useCallback(() => {
+    setRecordedAudioFile(null);
+    setRecordedAudioUrl((current) => {
+      if (current) {
+        URL.revokeObjectURL(current);
+      }
+      return null;
+    });
+    setRecordingState('idle');
+    setRecordingSeconds(0);
+  }, []);
+
+  const startAudioRecording = async () => {
+    if (sending || recordingState === 'recording') {
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMimeType = [
+        'audio/ogg;codecs=opus',
+        'audio/webm;codecs=opus',
+        'audio/webm',
+      ].find((mimeType) => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(mimeType));
+
+      const recorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream);
+
+      recordingChunksRef.current = [];
+      recordingStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      recordingCancelledRef.current = false;
+      setRecordingSeconds(0);
+      setRecordingState('recording');
+
+      recorder.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) {
+          recordingChunksRef.current.push(event.data);
+        }
+      });
+
+      recorder.addEventListener('stop', () => {
+        if (recordingCancelledRef.current) {
+          recordingCancelledRef.current = false;
+          recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+          recordingStreamRef.current = null;
+          mediaRecorderRef.current = null;
+          recordingChunksRef.current = [];
+          return;
+        }
+
+        const mimeType = recorder.mimeType || preferredMimeType || 'audio/webm';
+        const blob = new Blob(recordingChunksRef.current, { type: mimeType });
+        const extension = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') ? 'm4a' : 'webm';
+        const file = new File([blob], `voice-message.${extension}`, { type: blob.type || mimeType });
+
+        clearRecordedAudio();
+        setRecordedAudioFile(file);
+        setRecordedAudioUrl(URL.createObjectURL(file));
+        setRecordingState('preview');
+
+        recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+        recordingStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        recordingChunksRef.current = [];
+      }, { once: true });
+
+      recorder.start();
+    } catch (error) {
+      console.error('Error starting audio recording:', error);
+      alert('Не удалось получить доступ к микрофону');
+      recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+      recordingStreamRef.current = null;
+      mediaRecorderRef.current = null;
+      recordingChunksRef.current = [];
+      setRecordingState('idle');
+      setRecordingSeconds(0);
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const cancelAudioRecording = () => {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      recordingCancelledRef.current = true;
+      mediaRecorderRef.current.stop();
+    }
+
+    recordingChunksRef.current = [];
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    recordingStreamRef.current = null;
+    mediaRecorderRef.current = null;
+    clearRecordedAudio();
+  };
+
+  const sendRecordedAudio = async () => {
+    if (!recordedAudioFile) {
+      return;
+    }
+
+    await sendPayload({ file: recordedAudioFile, mediaType: 'audio', fieldName: 'audio' });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -951,7 +1102,7 @@ export default function ChatClient({
                           }`}
                         >
                           {message.mediaType && mediaUrl && (
-                            <div className={`${message.text ? 'mb-2' : ''} ${message.mediaType === 'voice' || message.mediaType === 'video_note' ? '' : 'overflow-hidden rounded-[14px] bg-black/5 dark:bg-black/20'}`}>
+                            <div className={`${message.text ? 'mb-2' : ''} ${message.mediaType === 'voice' || message.mediaType === 'video_note' || message.mediaType === 'audio' ? '' : 'overflow-hidden rounded-[14px] bg-black/5 dark:bg-black/20'}`}>
                               {message.mediaType === 'photo' && (
                                 <button
                                   type="button"
@@ -990,6 +1141,17 @@ export default function ChatClient({
                                       ♪
                                     </span>
                                     <span>Голосовое сообщение</span>
+                                  </div>
+                                  <audio src={mediaUrl} controls preload="metadata" className="block w-full max-w-[280px]" />
+                                </div>
+                              )}
+                              {message.mediaType === 'audio' && (
+                                <div className="min-w-[240px] max-w-full px-3 py-3">
+                                  <div className="mb-2 flex items-center gap-2 text-[12px] font-medium text-[#5f7e99] dark:text-[#9bb8d1]">
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#4f8fd0] text-sm text-white shadow-[0_8px_18px_rgba(79,143,208,0.24)]">
+                                      ♫
+                                    </span>
+                                    <span>Аудиосообщение</span>
                                   </div>
                                   <audio src={mediaUrl} controls preload="metadata" className="block w-full max-w-[280px]" />
                                 </div>
@@ -1052,22 +1214,75 @@ export default function ChatClient({
               >
                 📎
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (recordingState === 'recording') {
+                    stopAudioRecording();
+                    return;
+                  }
+
+                  if (recordingState === 'preview') {
+                    void sendRecordedAudio();
+                    return;
+                  }
+
+                  void startAudioRecording();
+                }}
+                disabled={sending}
+                className={`inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${recordingState === 'recording' ? 'bg-[#ff7d7d] text-white shadow-[0_10px_22px_rgba(255,125,125,0.28)] hover:bg-[#ff6b6b]' : recordingState === 'preview' ? 'bg-[#4f8fd0] text-white shadow-[0_10px_22px_rgba(79,143,208,0.28)] hover:bg-[#437bb3]' : 'bg-[#dfe9f2] text-xl text-[#5f7e99] hover:bg-[#d2e1ed] dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]'} dark:disabled:opacity-60`}
+                aria-label={recordingState === 'recording' ? 'Остановить запись' : recordingState === 'preview' ? 'Отправить аудио' : 'Записать аудио'}
+              >
+                {recordingState === 'recording' ? '■' : recordingState === 'preview' ? '✓' : '🎙️'}
+              </button>
               <div className="flex min-h-11 flex-1 items-end rounded-[1.6rem] bg-white px-4 py-2.5 shadow-[inset_0_0_0_1px_rgba(201,214,226,0.9)] dark:bg-[#22303d] dark:shadow-none">
-                <textarea
-                  ref={inputRef}
-                  value={newMessage}
-                  onChange={(event) => setNewMessage(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  autoFocus
-                  placeholder="Напишите сообщение"
-                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2b3948] outline-none placeholder:text-[#89a0b5] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
-                  rows={1}
-                  disabled={sending}
-                />
+                {recordingState === 'recording' ? (
+                  <div className="flex w-full items-center justify-between gap-3 py-1">
+                    <div className="flex items-center gap-2 text-[14px] font-medium text-[#d45555] dark:text-[#ff9b9b]">
+                      <span className="inline-flex h-2.5 w-2.5 rounded-full bg-current animate-pulse" />
+                      <span>Идет запись</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-[#6e8499] dark:text-[#95abc0]">{formatRecordingTime(recordingSeconds)}</span>
+                      <button
+                        type="button"
+                        onClick={cancelAudioRecording}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#eef3f8] text-base text-[#6a8095] transition hover:bg-[#e0e9f1] dark:bg-[#2a3947] dark:text-[#acc4d9] dark:hover:bg-[#324555]"
+                        aria-label="Отменить запись"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ) : recordingState === 'preview' && recordedAudioUrl ? (
+                  <div className="flex w-full items-center gap-3 py-1">
+                    <audio src={recordedAudioUrl} controls preload="metadata" className="block min-w-0 flex-1" />
+                    <button
+                      type="button"
+                      onClick={clearRecordedAudio}
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eef3f8] text-lg text-[#6a8095] transition hover:bg-[#e0e9f1] dark:bg-[#2a3947] dark:text-[#acc4d9] dark:hover:bg-[#324555]"
+                      aria-label="Удалить запись"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <textarea
+                    ref={inputRef}
+                    value={newMessage}
+                    onChange={(event) => setNewMessage(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    placeholder="Напишите сообщение"
+                    className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#2b3948] outline-none placeholder:text-[#89a0b5] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
+                    rows={1}
+                    disabled={sending}
+                  />
+                )}
               </div>
               <button
                 onClick={() => void sendPayload()}
-                disabled={!newMessage.trim() || sending}
+                disabled={!newMessage.trim() || sending || recordingState !== 'idle'}
                 className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#4f8fd0] text-lg text-white shadow-[0_10px_22px_rgba(79,143,208,0.28)] transition hover:bg-[#437bb3] disabled:cursor-not-allowed disabled:bg-[#b7c9d9] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
                 aria-label="Отправить"
               >
