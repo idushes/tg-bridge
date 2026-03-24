@@ -64,12 +64,12 @@ export default function Home() {
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-[3.5rem] lg:leading-[1.1]">
-              Они пишут по ссылке, <br className="hidden sm:block" />
-              <span className="text-[#4a83c6] dark:text-[#5fa3ed]">вы читаете в Telegram</span>
+              Связь с близкими <br className="hidden sm:block" />
+              <span className="text-[#4a83c6] dark:text-[#5fa3ed]">без VPN и регистраций</span>
             </h1>
             
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-              Простой веб-чат для родителей и близких. Без VPN, паролей и установок новых приложений. Им нужна только ссылка, вам — только Telegram.
+              Они открывают простую ссылку в браузере, а вы получаете сообщения прямо в свой Telegram. Никаких новых приложений и сложных настроек для родителей.
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
