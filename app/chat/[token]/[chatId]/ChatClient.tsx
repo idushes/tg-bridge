@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
 import { useChatNotifications } from '../useChatNotifications';
@@ -152,6 +153,16 @@ export default function ChatClient({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = '0px';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+  }, [newMessage]);
 
   const syncMessages = useCallback(async () => {
     try {
@@ -414,26 +425,7 @@ export default function ChatClient({
                 </p>
                 <h1 className="mt-1 text-2xl font-semibold text-[#182533] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
-              <button
-                onClick={() => {
-                  const newMode = !darkMode;
-                  setDarkMode(newMode);
-                  localStorage.setItem('darkMode', String(newMode));
-                }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
-                aria-label="Переключить тему"
-              >
-                {darkMode ? '☀️' : '🌙'}
-              </button>
             </div>
-
-            <a
-              href={`/chat/${inviteToken}`}
-              className="flex items-center gap-3 rounded-2xl bg-[#f1f6fb] px-4 py-3 text-sm text-[#62809a] transition hover:bg-[#e7f0f8] dark:bg-[#22303d] dark:text-[#8ea7bf] dark:hover:bg-[#293847]"
-            >
-              <span className="text-base">←</span>
-              <span>Вернуться к списку</span>
-            </a>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-2">
@@ -442,7 +434,7 @@ export default function ChatClient({
               const isActive = chat.participantChatId === chatId;
 
               return (
-                <a
+                <Link
                   key={chat.participantChatId}
                   href={`/chat/${inviteToken}/${chat.participantChatId}`}
                   className={`flex items-center gap-3 rounded-[22px] px-3 py-3 transition ${
@@ -469,7 +461,7 @@ export default function ChatClient({
                       {chat.participantUsername ? `@${chat.participantUsername}` : 'Открыть переписку'}
                     </p>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>
@@ -478,12 +470,12 @@ export default function ChatClient({
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#e5eef5] dark:bg-[#101b27] md:rounded-r-[28px] md:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
           <header className="shrink-0 border-b border-black/5 bg-white/88 px-4 py-3 backdrop-blur dark:border-white/5 dark:bg-[#17212b]/96 md:px-5">
             <div className="mx-auto flex max-w-5xl items-center gap-3">
-              <a
+              <Link
                 href={`/chat/${inviteToken}`}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847] md:hidden"
               >
                 ←
-              </a>
+              </Link>
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#56a7f5] to-[#3d7bff] text-sm font-semibold text-white shadow-[0_10px_20px_rgba(61,123,255,0.28)]">
                 {getInitials(currentTitle)}
               </div>
@@ -497,7 +489,7 @@ export default function ChatClient({
                   setDarkMode(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#edf4fa] text-lg text-[#557088] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
                 aria-label="Переключить тему"
               >
                 {darkMode ? '☀️' : '🌙'}
@@ -525,19 +517,22 @@ export default function ChatClient({
                     return (
                       <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                         <div
-                          className={`max-w-[82%] rounded-[22px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
+                          className={`max-w-[82%] rounded-[20px] px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] md:max-w-[70%] ${
                             isUser
                               ? 'rounded-br-[10px] bg-[#d9f6c7] text-[#18351f] dark:bg-[#2b5278] dark:text-white'
                               : 'rounded-bl-[10px] bg-white text-[#1e2e3d] dark:bg-[#182533] dark:text-[#eef5fb]'
                           }`}
                         >
                           {message.mediaType && mediaUrl && (
-                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-2xl bg-black/5 dark:bg-black/20`}>
+                            <div className={`${message.text ? 'mb-2' : ''} overflow-hidden rounded-[16px] bg-black/5 dark:bg-black/20`}>
                               {message.mediaType === 'photo' && (
-                                <img src={mediaUrl} alt="Фото" className="max-h-[360px] w-full object-cover" />
+                                <div className="relative">
+                                  <img src={mediaUrl} alt="Фото" className="max-h-[420px] w-full object-cover" />
+                                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/30 to-transparent" />
+                                </div>
                               )}
                               {message.mediaType === 'video' && (
-                                <video src={mediaUrl} controls className="max-h-[360px] w-full" />
+                                <video src={mediaUrl} controls className="max-h-[420px] w-full" />
                               )}
                               {message.mediaType === 'voice' && (
                                 <audio src={mediaUrl} controls className="m-3 w-[260px] max-w-full" />
@@ -547,7 +542,7 @@ export default function ChatClient({
                                   href={mediaUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-3 p-4 text-sm font-medium"
+                                  className="flex cursor-pointer items-center gap-3 p-4 text-sm font-medium"
                                 >
                                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#419fd9] text-lg text-white">📎</span>
                                   Открыть документ
@@ -562,7 +557,7 @@ export default function ChatClient({
                             isUser ? 'text-[#52795d] dark:text-[#b7d4f4]' : 'text-[#7d8f9f] dark:text-[#8ea7bf]'
                           }`}>
                             <span suppressHydrationWarning>{hydrated ? formatMessageTime(message.timestamp) : ''}</span>
-                            {message.id.startsWith('local-') && <span>⌛</span>}
+                            {message.id.startsWith('local-') && <span className="text-[10px]">⌛</span>}
                           </div>
                         </div>
                       </div>
@@ -586,7 +581,7 @@ export default function ChatClient({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending}
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#edf4fa] text-xl text-[#5b7b94] transition hover:bg-[#e2edf7] disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
+                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#edf4fa] text-xl text-[#5b7b94] transition hover:bg-[#e2edf7] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#22303d] dark:text-[#a7c3db] dark:hover:bg-[#293847]"
                 aria-label="Отправить фото"
               >
                 📎
@@ -598,7 +593,7 @@ export default function ChatClient({
                   onChange={(event) => setNewMessage(event.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Напишите сообщение"
-                  className="max-h-40 min-h-6 w-full resize-none bg-transparent text-[15px] leading-6 text-[#1f2d3b] outline-none placeholder:text-[#8ca2b7] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
+                  className="max-h-40 min-h-6 w-full resize-none overflow-y-auto bg-transparent text-[15px] leading-6 text-[#1f2d3b] outline-none placeholder:text-[#8ca2b7] dark:text-[#eef5fb] dark:placeholder:text-[#6f8aa3]"
                   rows={1}
                   disabled={sending}
                 />
@@ -606,7 +601,7 @@ export default function ChatClient({
               <button
                 onClick={() => void sendPayload()}
                 disabled={!newMessage.trim() || sending}
-                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#56a7f5] text-xl text-white shadow-[0_14px_24px_rgba(86,167,245,0.35)] transition hover:bg-[#4699e7] disabled:cursor-not-allowed disabled:bg-[#a8cfee] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
+                className="inline-flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#56a7f5] text-xl text-white shadow-[0_14px_24px_rgba(86,167,245,0.35)] transition hover:bg-[#4699e7] disabled:cursor-not-allowed disabled:bg-[#a8cfee] disabled:shadow-none dark:bg-[#3d7bff] dark:hover:bg-[#4c87ff] dark:disabled:bg-[#365478]"
                 aria-label="Отправить"
               >
                 {sending ? '…' : '➤'}

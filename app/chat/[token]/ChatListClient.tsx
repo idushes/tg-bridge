@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ChatMeta } from '@/lib/types';
 import { useChatNotifications } from './useChatNotifications';
@@ -99,7 +100,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                   setDarkMode(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#eef4fa] text-lg text-[#4b6178] transition hover:bg-[#dfeaf5] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
                 aria-label="Переключить тему"
               >
                 {darkMode ? '☀️' : '🌙'}
@@ -133,7 +134,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                 const chatName = getChatName(chat);
 
                 return (
-                  <a
+                  <Link
                     key={chat.participantChatId}
                     href={`/chat/${token}/${chat.participantChatId}`}
                     className="flex items-center gap-3 rounded-[22px] px-3 py-3 transition hover:bg-[#edf4fa] dark:hover:bg-[#22303d]"
@@ -150,7 +151,7 @@ export default function ChatListClient({ token, botName, chats }: ChatListClient
                       </div>
                       <p className="mt-1 truncate text-[13px] text-[#73879c] dark:text-[#8ba2b8]">{getChatSubtitle(chat)}</p>
                     </div>
-                  </a>
+                  </Link>
                 );
               })
             )}
