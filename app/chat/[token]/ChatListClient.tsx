@@ -2,14 +2,14 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ChatMeta } from '@/lib/types';
 import { getUnreadCount, markChatAsRead } from './chatReadState';
 import { useInstallPrompt } from './useInstallPrompt';
 import { useChatNotifications } from './useChatNotifications';
 import { useLiveChats } from './useLiveChats';
 
-function getInitialDarkMode() {
+function getPreferredDarkMode() {
   if (typeof window === 'undefined') {
     return false;
   }
@@ -20,6 +20,10 @@ function getInitialDarkMode() {
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function subscribeToHydration() {
+  return () => {};
 }
 
 function getChatName(chat: ChatMeta) {
@@ -83,12 +87,14 @@ interface ChatListClientProps {
 }
 
 export default function ChatListClient({ token, botName, botUsername, chats }: ChatListClientProps) {
-  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  const [darkModeOverride, setDarkModeOverride] = useState<boolean | null>(null);
   const [search, setSearch] = useState('');
   const [copied, setCopied] = useState(false);
   const [failedAvatarIds, setFailedAvatarIds] = useState<Record<number, boolean>>({});
   const { liveChats } = useLiveChats({ token, initialChats: chats });
   const { canInstall, promptInstall } = useInstallPrompt();
+  const darkMode = darkModeOverride ?? (hydrated ? getPreferredDarkMode() : false);
 
   useChatNotifications({ token });
 
@@ -149,7 +155,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
               <button
                 onClick={() => {
                   const newMode = !darkMode;
-                  setDarkMode(newMode);
+                  setDarkModeOverride(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
                 className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#e8f0f7] text-lg text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#2a3a49]"
@@ -185,10 +191,10 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
               <button
                 type="button"
                 onClick={() => void promptInstall()}
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#419fd9] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#3793cc] dark:bg-[#3b82c4] dark:hover:bg-[#4a8ecb]"
+                className="mt-3 inline-flex h-9 items-center gap-2 rounded-full bg-[#419fd9] px-3.5 text-sm font-medium text-white transition hover:bg-[#3793cc] dark:bg-[#3b82c4] dark:hover:bg-[#4a8ecb]"
               >
-                <span>Установить как приложение</span>
-                <span className="ml-3 shrink-0">＋</span>
+                <span className="text-base leading-none">↓</span>
+                <span>Установить</span>
               </button>
             )}
           </div>
@@ -207,6 +213,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
             ) : (
               filteredChats.map((chat) => {
                 const chatName = getChatName(chat);
+                const unreadCount = hydrated ? getUnreadCount(token, chat) : 0;
 
                 return (
                   <Link
@@ -237,18 +244,18 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
                      <div className="min-w-0 flex-1">
                        <div className="flex items-center gap-3">
                         <p className="truncate text-[15px] font-medium text-[#233547] dark:text-[#f5f7fb]">{chatName}</p>
-                        <span className="ml-auto shrink-0 text-[11px] font-medium text-[#7b93aa] dark:text-[#6d8298]">
-                          {formatUpdatedAt(chat.updatedAt)}
-                        </span>
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-2">
-                        <p className="min-w-0 flex-1 truncate text-[13px] text-[#6f8498] dark:text-[#8ba2b8]">{getChatSubtitle(chat)}</p>
-                        {getUnreadCount(token, chat) > 0 && (
-                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#419fd9] px-1.5 text-[11px] font-semibold text-white shadow-[0_6px_12px_rgba(65,159,217,0.28)]">
-                            {getUnreadCount(token, chat)}
-                          </span>
-                        )}
-                      </div>
+                         <span className="ml-auto shrink-0 text-[11px] font-medium text-[#7b93aa] dark:text-[#6d8298]" suppressHydrationWarning>
+                          {hydrated ? formatUpdatedAt(chat.updatedAt) : ''}
+                         </span>
+                       </div>
+                       <div className="mt-0.5 flex items-center gap-2">
+                         <p className="min-w-0 flex-1 truncate text-[13px] text-[#6f8498] dark:text-[#8ba2b8]">{getChatSubtitle(chat)}</p>
+                         {unreadCount > 0 && (
+                           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#419fd9] px-1.5 text-[11px] font-semibold text-white shadow-[0_6px_12px_rgba(65,159,217,0.28)]">
+                             {unreadCount}
+                           </span>
+                         )}
+                       </div>
                     </div>
                   </Link>
                 );

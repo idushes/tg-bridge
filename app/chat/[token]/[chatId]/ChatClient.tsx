@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ChatMeta, Message } from '@/lib/types';
 import { getUnreadCount, markChatAsRead } from '../chatReadState';
 import { useInstallPrompt } from '../useInstallPrompt';
@@ -57,7 +57,7 @@ function upsertMessage(messages: Message[], nextMessage: Message) {
   return updated.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
 }
 
-function getInitialDarkMode() {
+function getPreferredDarkMode() {
   if (typeof window === 'undefined') {
     return false;
   }
@@ -68,6 +68,10 @@ function getInitialDarkMode() {
   }
 
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function subscribeToHydration() {
+  return () => {};
 }
 
 function getChatName(chat: ChatMeta) {
@@ -190,8 +194,8 @@ export default function ChatClient({
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
-  const [hydrated, setHydrated] = useState(false);
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  const [darkModeOverride, setDarkModeOverride] = useState<boolean | null>(null);
   const [loadedMediaIds, setLoadedMediaIds] = useState<Record<string, boolean>>({});
   const [expandedPhoto, setExpandedPhoto] = useState<{ src: string; alt: string } | null>(null);
   const [freshMessageIds, setFreshMessageIds] = useState<string[]>([]);
@@ -206,6 +210,7 @@ export default function ChatClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { canInstall, promptInstall } = useInstallPrompt();
+  const darkMode = darkModeOverride ?? (hydrated ? getPreferredDarkMode() : false);
 
   const activeChat = useMemo(
     () => liveChats.find((chat) => chat.participantChatId === activeChatId) ?? null,
@@ -240,10 +245,6 @@ export default function ChatClient({
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
 
   useEffect(() => {
     if (!expandedPhoto) {
@@ -655,10 +656,10 @@ export default function ChatClient({
               <button
                 type="button"
                 onClick={() => void promptInstall()}
-                className="flex w-full items-center justify-between rounded-xl bg-[#419fd9] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#3793cc] dark:bg-[#3b82c4] dark:hover:bg-[#4a8ecb]"
+                className="inline-flex h-9 items-center gap-2 rounded-full bg-[#419fd9] px-3.5 text-sm font-medium text-white transition hover:bg-[#3793cc] dark:bg-[#3b82c4] dark:hover:bg-[#4a8ecb]"
               >
-                <span>Установить как приложение</span>
-                <span className="ml-3 shrink-0">＋</span>
+                <span className="text-base leading-none">↓</span>
+                <span>Установить</span>
               </button>
             )}
           </div>
@@ -667,6 +668,7 @@ export default function ChatClient({
             {liveChats.map((chat) => {
               const chatName = getChatName(chat);
               const isActive = chat.participantChatId === activeChatId;
+              const unreadCount = hydrated || isActive ? getUnreadCount(inviteToken, chat) : 0;
 
               return (
                 <button
@@ -704,21 +706,21 @@ export default function ChatClient({
                     )}
                    </div>
                    <div className="min-w-0 flex-1">
-                     <div className="flex items-center gap-3">
-                       <p className="truncate text-[15px] font-medium">{chatName}</p>
-                       <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#7b93aa] dark:text-[#6d8298]'}`}>
-                         {formatSidebarTime(chat.updatedAt)}
-                       </span>
-                     </div>
-                     <div className="mt-0.5 flex items-center gap-2">
-                       <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#6f8498] dark:text-[#8ba2b8]'}`}>
-                         {getChatPreview(chat)}
-                       </p>
-                       {!isActive && getUnreadCount(inviteToken, chat) > 0 && (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#419fd9] px-1.5 text-[11px] font-semibold text-white shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
-                          {getUnreadCount(inviteToken, chat)}
+                      <div className="flex items-center gap-3">
+                        <p className="truncate text-[15px] font-medium">{chatName}</p>
+                        <span className={`ml-auto shrink-0 text-[11px] font-medium ${isActive ? 'text-white/75' : 'text-[#7b93aa] dark:text-[#6d8298]'}`} suppressHydrationWarning>
+                          {hydrated ? formatSidebarTime(chat.updatedAt) : ''}
                         </span>
-                      )}
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        <p className={`min-w-0 flex-1 truncate text-[13px] ${isActive ? 'text-white/75' : 'text-[#6f8498] dark:text-[#8ba2b8]'}`}>
+                          {getChatPreview(chat)}
+                        </p>
+                        {!isActive && unreadCount > 0 && (
+                         <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#419fd9] px-1.5 text-[11px] font-semibold text-white shadow-sm dark:bg-[#5fb0ff] dark:text-[#0f2031]">
+                           {unreadCount}
+                         </span>
+                       )}
                     </div>
                   </div>
                 </button>
@@ -760,7 +762,7 @@ export default function ChatClient({
               <button
                 onClick={() => {
                   const newMode = !darkMode;
-                  setDarkMode(newMode);
+                  setDarkModeOverride(newMode);
                   localStorage.setItem('darkMode', String(newMode));
                 }}
                 className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#e8f0f7] text-lg text-[#5f7e99] transition hover:bg-[#dce9f4] dark:bg-[#22303d] dark:text-[#a6c4de] dark:hover:bg-[#293847]"
