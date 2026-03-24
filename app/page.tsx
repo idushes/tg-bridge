@@ -128,8 +128,8 @@ export default function Home() {
                     <Bot className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">Anna Helper Bot</div>
-                    <div className="text-xs text-[#4a83c6] dark:text-[#5fa3ed]">bot</div>
+                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">Екатерина Андреевна</div>
+                    <div className="text-xs text-[#4a83c6] dark:text-[#5fa3ed]">kate_mama_bot</div>
                   </div>
                 </div>
                 <div className="p-4">
