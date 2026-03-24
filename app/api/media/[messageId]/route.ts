@@ -49,6 +49,7 @@ export async function GET(
     photo: 'image/jpeg',
     video: 'video/mp4',
     voice: 'audio/ogg',
+    video_note: 'video/mp4',
     document: 'application/octet-stream',
   };
 

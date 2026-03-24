@@ -192,7 +192,7 @@ export async function sendPhotoFile(
 export function extractMessageFromUpdate(update: TelegramUpdate): {
   chatId: number;
   text: string;
-  mediaType?: 'photo' | 'video' | 'voice' | 'document';
+  mediaType?: 'photo' | 'video' | 'voice' | 'document' | 'video_note';
   mediaFileId?: string;
   unsupportedMessageType?: string;
 } | null {
@@ -200,7 +200,7 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
   
   const msg = update.message;
   let text = msg.text || '';
-  let mediaType: 'photo' | 'video' | 'voice' | 'document' | undefined;
+  let mediaType: 'photo' | 'video' | 'voice' | 'document' | 'video_note' | undefined;
   let mediaFileId: string | undefined;
   
   if (msg.photo && msg.photo.length > 0) {
@@ -224,6 +224,9 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
     if (!text && msg.caption) {
       text = msg.caption;
     }
+  } else if (msg.video_note) {
+    mediaType = 'video_note';
+    mediaFileId = msg.video_note.file_id;
   }
 
   const unsupportedMessageType = !mediaFileId && !text
@@ -231,7 +234,6 @@ export function extractMessageFromUpdate(update: TelegramUpdate): {
         ['audio', msg.audio],
         ['sticker', msg.sticker],
         ['animation', msg.animation],
-        ['video_note', msg.video_note],
         ['contact', msg.contact],
         ['location', msg.location],
         ['venue', msg.venue],

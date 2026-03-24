@@ -36,6 +36,7 @@ function getChatSubtitle(chat: ChatMeta) {
       photo: 'Фото',
       video: 'Видео',
       voice: 'Голосовое',
+      video_note: 'Кружочек',
       document: 'Документ',
     }[chat.lastMessageMediaType];
 

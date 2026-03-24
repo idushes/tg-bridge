@@ -93,6 +93,7 @@ function getChatPreview(chat: ChatMeta) {
       photo: 'Фото',
       video: 'Видео',
       voice: 'Голосовое',
+      video_note: 'Кружочек',
       document: 'Документ',
     }[chat.lastMessageMediaType];
 
@@ -850,6 +851,17 @@ export default function ChatClient({
                               )}
                               {message.mediaType === 'video' && (
                                 <video src={mediaUrl} controls className="max-h-[420px] w-full" />
+                              )}
+                              {message.mediaType === 'video_note' && (
+                                <div className="flex justify-center px-3 py-3">
+                                  <video
+                                    src={mediaUrl}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                    className="h-[220px] w-[220px] rounded-full bg-black object-cover shadow-[0_16px_36px_rgba(15,23,42,0.24)]"
+                                  />
+                                </div>
                               )}
                               {message.mediaType === 'voice' && (
                                 <div className="min-w-[240px] max-w-full px-3 py-3">
