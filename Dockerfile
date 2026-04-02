@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Копируем package.json и package-lock.json
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Собираем приложение
 FROM base AS builder
