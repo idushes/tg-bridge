@@ -1,0 +1,7 @@
+.next
+node_modules
+.git
+.env*
+README.md
+k8s/
+*.log
