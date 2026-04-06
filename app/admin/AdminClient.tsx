@@ -16,6 +16,18 @@ const firstLoginNotes = [
   'Если окно входа не появилось, попробуйте кнопку ниже или обновите страницу.',
 ];
 
+const createBotSteps = [
+  'Откройте @BotFather в приложении и отправьте команду /newbot.',
+  'Придумайте имя и username для бота, затем скопируйте выданный токен.',
+  'Нажмите «Добавить бота», вставьте токен и сохраните его в панели.',
+];
+
+const createBotResults = [
+  'Появится персональная ссылка на чат для близких.',
+  'Сообщения из браузерного чата будут приходить вам через бота.',
+  'При необходимости бота можно удалить и добавить заново.',
+];
+
 export default function AdminClient() {
   const telegramBotId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
   const [loading, setLoading] = useState(true);
@@ -339,6 +351,55 @@ export default function AdminClient() {
       </header>
 
       <main className="max-w-4xl mx-auto p-4">
+        <div className="mb-6 rounded-[1.75rem] bg-[#fffaf4] p-6 shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-2 text-sm font-medium uppercase tracking-[0.18em] text-[#7a6d5b] dark:text-zinc-400">
+                Быстрый старт
+              </p>
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Как создать первого бота</h2>
+              <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                Если вы ещё ничего не настраивали, начните с BotFather. Вся процедура обычно занимает пару минут.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowAddBot(true)}
+              className="cursor-pointer rounded-full bg-[#4f8fd0] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#437bb3]"
+            >
+              Добавить бота
+            </button>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-3">
+              {createBotSteps.map((step, index) => (
+                <div key={step} className="flex items-start gap-4 rounded-2xl bg-[#f7efe5] px-4 py-4 dark:bg-zinc-700/60">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4f8fd0] text-sm font-semibold text-white">
+                    {index + 1}
+                  </div>
+                  <p className="pt-1 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{step}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-[#e8dccd] bg-[#fffdf9] p-5 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Что подготовить</h3>
+              <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p>Нужен только токен, который выдаст BotFather после создания бота.</p>
+                <p>Токен выглядит примерно так: <span className="font-mono text-[13px]">1234567890:ABCdef...</span></p>
+              </div>
+
+              <h3 className="mt-5 text-sm font-semibold text-zinc-900 dark:text-white">Что будет дальше</h3>
+              <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                {createBotResults.map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">Ваши боты</h2>
           <button
