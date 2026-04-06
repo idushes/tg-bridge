@@ -4,6 +4,18 @@ import { useState, useEffect } from 'react';
 import type { BotConfig } from '@/lib/types';
 import Link from 'next/link';
 
+const firstLoginSteps = [
+  'Откройте Telegram на телефоне или компьютере, если вы уже пользуетесь им на этом устройстве.',
+  'Нажмите кнопку входа: откроется окно Telegram с доступным для вашего аккаунта способом авторизации.',
+  'После подтверждения вы сразу попадёте в панель управления ботами.',
+];
+
+const firstLoginNotes = [
+  'Мы не просим пароль и не читаем ваши личные переписки.',
+  'Нужен только аккаунт, с которого вы будете управлять своими ботами.',
+  'Если окно входа не появилось, попробуйте кнопку ниже или обновите страницу.',
+];
+
 export default function AdminClient() {
   const telegramBotId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
   const [loading, setLoading] = useState(true);
@@ -28,8 +40,37 @@ export default function AdminClient() {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  const fetchBots = async (tgId: number) => {
+    try {
+      const response = await fetch('/api/bots', {
+        headers: { 'x-telegram-id': tgId.toString() },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBots(data.bots);
+      }
+    } catch (error) {
+      console.error('Error fetching bots:', error);
+    }
+  };
+
   useEffect(() => {
-    checkAuth();
+    const run = async () => {
+      const tgId = localStorage.getItem('telegram_id');
+      const tgName = localStorage.getItem('telegram_name');
+
+      if (!tgId) {
+        setLoading(false);
+        return;
+      }
+
+      setUser({ id: parseInt(tgId), name: tgName || 'Пользователь' });
+      await fetchBots(parseInt(tgId));
+      setLoading(false);
+    };
+
+    void run();
   }, []);
 
   useEffect(() => {
@@ -64,35 +105,6 @@ export default function AdminClient() {
       container.innerHTML = '';
     };
   }, [loading, telegramBotId, user]);
-
-  const checkAuth = async () => {
-    const tgId = localStorage.getItem('telegram_id');
-    const tgName = localStorage.getItem('telegram_name');
-    
-    if (!tgId) {
-      setLoading(false);
-      return;
-    }
-    
-    setUser({ id: parseInt(tgId), name: tgName || 'Пользователь' });
-    await fetchBots(parseInt(tgId));
-    setLoading(false);
-  };
-
-  const fetchBots = async (tgId: number) => {
-    try {
-      const response = await fetch('/api/bots', {
-        headers: { 'x-telegram-id': tgId.toString() },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setBots(data.bots);
-      }
-    } catch (error) {
-      console.error('Error fetching bots:', error);
-    }
-  };
 
   const handleTelegramLogin = () => {
     const widget = (window as unknown as { Telegram?: { Login?: { auth: (config: { bot_id: string; request_access: string; return_url: string }, callback: (user: unknown) => void) => void } } }).Telegram;
@@ -157,7 +169,7 @@ export default function AdminClient() {
       if (tgId) {
         await fetchBots(parseInt(tgId));
       }
-    } catch (err) {
+    } catch {
       setError('Ошибка сети');
     } finally {
       setAdding(false);
@@ -200,30 +212,96 @@ export default function AdminClient() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f3ede3] dark:bg-zinc-900">
-        <div className="w-full max-w-md rounded-xl bg-[#fffaf4] p-8 text-center shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0]">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите для управления ботами</p>
-          
-          <div className="flex justify-center mb-4">
-            <div id="telegram-login-btn" />
+      <div className="min-h-screen bg-[#f3ede3] px-4 py-8 dark:bg-zinc-900">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[2rem] bg-[#fffaf4] p-8 shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#72a7d9] to-[#4f8fd0]">
+              <svg className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+
+            <p className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-[#7a6d5b] dark:text-zinc-400">
+              Панель управления
+            </p>
+            <h1 className="mb-4 text-3xl font-bold text-zinc-900 dark:text-white">
+              Первый вход занимает меньше минуты
+            </h1>
+            <p className="mb-8 max-w-xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
+              Авторизация нужна только для того, чтобы привязать ботов к вашему аккаунту и открыть панель управления. Способ входа определяет сам Telegram.
+            </p>
+
+            <div className="space-y-4">
+              {firstLoginSteps.map((step, index) => (
+                <div key={step} className="flex items-start gap-4 rounded-2xl bg-[#f7efe5] px-4 py-4 dark:bg-zinc-700/60">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4f8fd0] text-sm font-semibold text-white">
+                    {index + 1}
+                  </div>
+                  <p className="pt-1 text-sm leading-6 text-zinc-700 dark:text-zinc-200">{step}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-[#e8dccd] bg-[#fffdf9] p-5 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-white">Что важно знать</h2>
+              <div className="space-y-3">
+                {firstLoginNotes.map((note) => (
+                  <div key={note} className="flex items-start gap-3">
+                    <span className="mt-1 text-xs text-[#4f8fd0]">●</span>
+                    <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{note}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {!telegramBotId && (
-            <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
-              Не задан `NEXT_PUBLIC_TELEGRAM_BOT_ID`, поэтому кнопка входа не может загрузиться.
+          <div className="rounded-[2rem] bg-[#fffaf4] p-8 shadow-[0_18px_40px_rgba(73,61,41,0.06)] dark:bg-zinc-800">
+            <h2 className="mb-3 text-2xl font-bold text-zinc-900 dark:text-white">Войти</h2>
+            <p className="mb-6 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+              Нажмите кнопку ниже. Telegram откроет своё окно входа и предложит подтвердить авторизацию тем способом, который доступен для вашего аккаунта.
             </p>
-          )}
-          
-          <div className="border-t border-[#e4d8ca] pt-4 dark:border-zinc-700">
-            <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 cursor-pointer">
-              ← На главную
-            </Link>
+
+            <div className="mb-4 flex min-h-[56px] justify-center rounded-2xl border border-dashed border-[#d9ccbc] bg-[#fffdf9] px-4 py-4 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <div id="telegram-login-btn" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTelegramLogin}
+              disabled={!telegramBotId}
+              className="mb-4 w-full rounded-full bg-[#4f8fd0] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#437bb3] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Открыть окно входа
+            </button>
+
+            {!telegramBotId ? (
+              <div className="mb-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                Не задан `NEXT_PUBLIC_TELEGRAM_BOT_ID`, поэтому кнопка входа не может загрузиться.
+              </div>
+            ) : (
+              <div className="mb-4 rounded-2xl bg-[#f7efe5] px-4 py-3 text-sm leading-6 text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-300">
+                Если встроенная кнопка не появилась сразу, подождите пару секунд и нажмите кнопку выше.
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-[#e8dccd] bg-[#fffdf9] p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <p className="text-sm font-medium text-zinc-900 dark:text-white">После входа вы сможете:</p>
+              <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p>Добавлять и удалять ботов.</p>
+                <p>Получать персональные ссылки для чатов.</p>
+                <p>Управлять доступом из одного места.</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+              Если у вас аккаунт без обычного номера телефона, вход всё равно выполняется через окно Telegram и зависит от способа авторизации, доступного в самом аккаунте.
+            </p>
+
+            <div className="mt-6 border-t border-[#e4d8ca] pt-4 dark:border-zinc-700">
+              <Link href="/" className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300">
+                ← На главную
+              </Link>
+            </div>
           </div>
         </div>
       </div>
