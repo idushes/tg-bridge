@@ -17,26 +17,32 @@ import {
   Users
 } from 'lucide-react';
 
-function getInitialDarkMode() {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  const stored = localStorage.getItem('darkMode');
-  if (stored !== null) {
-    return stored === 'true';
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-}
-
 export default function Home() {
-  const [darkMode, setDarkMode] = useState(getInitialDarkMode);
+  const [darkMode, setDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const stored = localStorage.getItem('darkMode');
+      const initialDarkMode = stored !== null
+        ? stored === 'true'
+        : window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      setDarkMode(initialDarkMode);
+      setMounted(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     document.documentElement.classList.toggle('dark', darkMode);
     localStorage.setItem('darkMode', String(darkMode));
-  }, [darkMode]);
+  }, [darkMode, mounted]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,#f8f4ed_0%,#f0e6d6_100%)] text-[#1e293b] transition-colors dark:bg-[radial-gradient(ellipse_at_top,#1a2235_0%,#0f172a_100%)] dark:text-slate-100">
@@ -48,8 +54,8 @@ export default function Home() {
             onClick={() => setDarkMode(!darkMode)}
             className="inline-flex items-center gap-2 rounded-full border border-black/5 bg-white/60 px-4 py-2 text-sm font-medium text-slate-600 shadow-sm backdrop-blur transition-all hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
           >
-            {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            <span>{darkMode ? 'Светлая' : 'Тёмная'} тема</span>
+            {mounted && darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span>{mounted && darkMode ? 'Светлая' : 'Тёмная'} тема</span>
           </button>
         </div>
 
