@@ -98,7 +98,7 @@ export default function AdminClient() {
     const widget = (window as unknown as { Telegram?: { Login?: { auth: (config: { bot_id: string; request_access: string; return_url: string }, callback: (user: unknown) => void) => void } } }).Telegram;
     
     if (!widget?.Login?.auth) {
-      alert('Telegram виджет не загружен. Подождите немного и попробуйте снова.');
+      alert('Виджет входа не загружен. Подождите немного и попробуйте снова.');
       return;
     }
 
@@ -208,7 +208,7 @@ export default function AdminClient() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">Вход</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите через Telegram для управления ботами</p>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-6">Войдите для управления ботами</p>
           
           <div className="flex justify-center mb-4">
             <div id="telegram-login-btn" />
@@ -216,7 +216,7 @@ export default function AdminClient() {
 
           {!telegramBotId && (
             <p className="mb-4 text-sm text-amber-700 dark:text-amber-400">
-              Не задан `NEXT_PUBLIC_TELEGRAM_BOT_ID`, поэтому Telegram-кнопка не может загрузиться.
+              Не задан `NEXT_PUBLIC_TELEGRAM_BOT_ID`, поэтому кнопка входа не может загрузиться.
             </p>
           )}
           

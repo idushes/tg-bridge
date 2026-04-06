@@ -56,7 +56,7 @@ function getChatSubtitle(chat: ChatMeta) {
     return `@${chat.participantUsername}`;
   }
 
-  return 'Готов к диалогу в Telegram';
+  return 'Готов к диалогу';
 }
 
 function getInitials(name: string) {
@@ -150,7 +150,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7e95ab] dark:text-[#6c8299]">
-                  Telegram Bridge
+                  Family Bridge
                 </p>
                 <h1 className="mt-1 text-2xl font-semibold text-[#233547] dark:text-[#f5f7fb]">{botName}</h1>
               </div>
@@ -209,7 +209,7 @@ export default function ChatListClient({ token, botName, botUsername, chats }: C
                 </div>
                 <h2 className="text-lg font-semibold text-[#323843] dark:text-[#f4f7fb]">Чаты появятся здесь</h2>
                 <p className="mt-2 text-sm leading-6 text-[#7f7468] dark:text-[#88a0b7]">
-                  Попросите близкого написать боту в Telegram. Когда появится первый диалог, он будет выглядеть как привычный список чатов.
+                  Попросите близкого написать боту. Когда появится первый диалог, он будет выглядеть как привычный список чатов.
                 </p>
               </div>
             ) : (

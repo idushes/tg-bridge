@@ -71,11 +71,11 @@ export default function Home() {
 
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-[3.5rem] lg:leading-[1.1]">
               Связь с близкими <br className="hidden sm:block" />
-              <span className="text-[#4a83c6] dark:text-[#5fa3ed]">без VPN и регистраций</span>
+              <span className="text-[#4a83c6] dark:text-[#5fa3ed]">через простую ссылку</span>
             </h1>
             
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-              Они открывают простую ссылку в браузере, а вы получаете сообщения прямо в свой Telegram. Никаких новых приложений и сложных настроек для родителей.
+              Они открывают простую ссылку в браузере, а вы получаете сообщения прямо в привычный чат. Никаких новых приложений и сложных настроек для родителей.
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -83,12 +83,12 @@ export default function Home() {
                 href="/admin"
                 className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#4a83c6] px-8 py-4 text-base font-semibold text-white shadow-lg shadow-[#4a83c6]/25 transition-all hover:-translate-y-0.5 hover:bg-[#3b6ea8] hover:shadow-xl hover:shadow-[#4a83c6]/30 dark:bg-[#5fa3ed] dark:text-slate-900 dark:shadow-[#5fa3ed]/20 dark:hover:bg-[#7db4f5]"
               >
-                Создать свой чат
+                Начать настройку
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                Безопасный вход через Telegram
+                Безопасный вход
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function Home() {
                     <div className="h-3 w-3 rounded-full bg-emerald-400/80"></div>
                   </div>
                   <div className="flex-1 rounded-md bg-white px-3 py-1 text-center text-xs text-slate-400 dark:bg-slate-800/50">
-                    telegram.lisacorp.com/chat/dsf43tgf2
+                    t.lisacorp.com/chat/dsf43tgf2
                   </div>
                 </div>
                 <div className="p-4">
@@ -127,7 +127,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Telegram Chat (App) */}
+              {/* App Chat */}
               <div className="rounded-2xl border border-slate-200 bg-[#e3f0fa] shadow-sm dark:border-slate-800 dark:bg-[#152336]">
                 <div className="flex items-center gap-3 border-b border-[#c8e1f5] px-4 py-3 dark:border-slate-800">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#4a83c6] text-white">
@@ -147,7 +147,7 @@ export default function Home() {
                   </div>
                   <div className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm dark:bg-slate-800 dark:text-slate-200">
-                      Супер! Я вижу это прямо в Telegram 🚀
+                      Супер! Я вижу это сразу в чате 🚀
                     </div>
                   </div>
                 </div>
@@ -168,14 +168,14 @@ export default function Home() {
 
           <div className="mt-12 flex flex-col items-center justify-center gap-6 lg:flex-row lg:gap-12">
             
-            {/* Telegram Side */}
+            {/* App Side */}
             <div className="flex w-full max-w-xs flex-col items-center rounded-3xl bg-white p-8 text-center shadow-lg shadow-slate-200/50 dark:bg-slate-900/50 dark:shadow-none lg:w-1/3">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-500 dark:bg-blue-500/10 dark:text-blue-400">
                 <Smartphone className="h-8 w-8" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Для вас</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Вы не устанавливаете новые приложения. Все сообщения от родных приходят в <strong>ваш Telegram</strong> через специального бота.
+                Вы не устанавливаете новые приложения. Все сообщения от родных приходят в <strong>ваш чат</strong> через специального бота.
               </p>
             </div>
 
@@ -217,7 +217,7 @@ export default function Home() {
               <Bot className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Создайте бота</h3>
               <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Напишите <strong>@BotFather</strong> в Telegram, отправьте <code>/newbot</code> и скопируйте выданный токен.
+                Напишите <strong>@BotFather</strong> в мессенджере, отправьте <code>/newbot</code> и скопируйте выданный токен.
               </p>
             </div>
 
@@ -228,7 +228,7 @@ export default function Home() {
               <ShieldCheck className="mb-5 h-10 w-10 text-[#4a83c6] dark:text-[#5fa3ed]" />
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Добавьте токен</h3>
               <p className="mt-3 text-slate-600 dark:text-slate-400">
-                Авторизуйтесь на этом сайте через Telegram и вставьте токен в панель управления.
+                Авторизуйтесь на этом сайте и вставьте токен в панель управления.
               </p>
             </div>
 
@@ -304,8 +304,8 @@ export default function Home() {
                     <CheckCircle2 className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Обход блокировок</h3>
-                    <p className="mt-1 text-slate-600 dark:text-slate-400">Если в регионе ваших близких блокируют мессенджеры, браузерная версия часто продолжает работать без сбоев.</p>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Стабильная связь</h3>
+                    <p className="mt-1 text-slate-600 dark:text-slate-400">Браузерный чат помогает оставаться на связи с близкими без лишних сложностей и дополнительных приложений.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -323,7 +323,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Сообщения приходят сразу</h3>
-                    <p className="mt-1 text-slate-600 dark:text-slate-400">Близкие пишут в простом окне браузера, а вы отвечаете им из привычного Telegram без переключения между сервисами.</p>
+                    <p className="mt-1 text-slate-600 dark:text-slate-400">Близкие пишут в простом окне браузера, а вы отвечаете им из привычного чата без переключения между сервисами.</p>
                   </div>
                 </div>
               </div>
@@ -334,9 +334,9 @@ export default function Home() {
                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white text-4xl shadow-xl dark:bg-slate-800">
                    👵
                  </div>
-                 <blockquote className="text-xl italic leading-relaxed text-slate-700 dark:text-slate-300">
-                   «Я просто нажимаю на закладку в телефоне, и сразу могу написать сыну. Очень удобно, не нужно просить соседей настраивать VPN!»
-                 </blockquote>
+	                 <blockquote className="text-xl italic leading-relaxed text-slate-700 dark:text-slate-300">
+	                   «Я просто нажимаю на закладку в телефоне и сразу могу написать сыну. Очень удобно и ничего лишнего настраивать не нужно!»
+	                 </blockquote>
                </div>
                {/* Decorative background shapes */}
                <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-orange-200/50 blur-3xl dark:bg-blue-900/30"></div>
@@ -351,7 +351,7 @@ export default function Home() {
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#6fa6d9] to-[#376fb3] text-white">
               <Zap className="h-4 w-4" />
             </span>
-            Telegram Bridge
+            Family Bridge
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Делаем общение с близкими проще, вне зависимости от расстояний и блокировок.

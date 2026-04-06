@@ -14,14 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Telegram Bridge",
-  description: "Обходите блокировки и общайтесь с близкими через Telegram без ограничений",
+  title: "Family Bridge",
+  description: "Простой способ оставаться на связи с близкими через браузерный чат",
   manifest: "/manifest.webmanifest",
-  applicationName: "Telegram Bridge",
+  applicationName: "Family Bridge",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Telegram Bridge",
+    title: "Family Bridge",
   },
   icons: {
     icon: [

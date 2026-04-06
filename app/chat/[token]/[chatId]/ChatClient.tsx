@@ -909,7 +909,7 @@ export default function ChatClient({
   const currentTitle = activeChat ? getChatName(activeChat) : partnerName;
   const currentSubtitle = activeChat?.participantUsername
     ? `был(а) недавно · @${activeChat.participantUsername}`
-    : 'Сообщения доставляются через Telegram';
+    : 'Сообщения доставляются через бот';
 
   const copyBotLink = async () => {
     try {
@@ -935,7 +935,7 @@ export default function ChatClient({
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7e95ab] dark:text-[#6c8299]">
-                  Telegram Bridge
+                  Family Bridge
                 </p>
                 <h1 className="mt-1 text-[28px] font-semibold text-[#233547] dark:text-[#f5f7fb]">Чаты</h1>
               </div>
